@@ -435,14 +435,14 @@ public class CNDEnergyEventListener extends CNDCalibrationEngine {
 
 						//                    dataGroups.getItem(sector,layer,component).getH2F("adcL_vs_z").fill( hitPosition, normalisingADCFactor*paddlePair.ADCL);
 						//                    dataGroups.getItem(sector,layer,component).getH2F("adcR_vs_z").fill( hitPosition, normalisingADCFactor*paddlePair.ADCR);
-						if (directHitPaddle == 0 && paddlePair.ZPOS!=0.0 && paddlePair.CHARGE==-1){ //&& paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
+						if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0 && paddlePair.CHARGE==-1){ //&& paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
 							dataGroups.getItem(sector, layer, component).getH2F("adcLdir_vs_z").fill(hitPosition, Math.log( normalisingADCFactor *paddlePair.ADCL));
 							dataGroups.getItem(sector, layer, component).getH2F("adcLindir_vs_z").fill(paddleLength-hitPosition, Math.log( normalisingADCFactor *paddlePair.ADCR));
 							//                        System.out.println(" ");
 							//                        System.out.println("z = " + hitPosition);
 							//                        System.out.println("ADCR = " + paddlePair.ADCR);
 							//                        System.out.println("ADCL = " + paddlePair.ADCL);
-						} else if (directHitPaddle == 1 && paddlePair.ZPOS!=0.0  && paddlePair.CHARGE==-1){ // && paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
+						} else if (paddlePair.COMP==2 && paddlePair.ZPOS!=0.0  && paddlePair.CHARGE==-1){ // && paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
 							dataGroups.getItem(sector, layer, component).getH2F("adcRdir_vs_z").fill(hitPosition, Math.log(normalisingADCFactor * paddlePair.ADCR));
 							dataGroups.getItem(sector, layer, component).getH2F("adcRindir_vs_z").fill(paddleLength-hitPosition, Math.log(normalisingADCFactor * paddlePair.ADCL));
 						}
@@ -450,14 +450,14 @@ public class CNDEnergyEventListener extends CNDCalibrationEngine {
 					}
 
 					if(Cosmics){
-						if (directHitPaddle == 0 ){//&& include ){ //&& paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
+						if (paddlePair.COMP==1){//&& include ){ //&& paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
 							dataGroups.getItem(sector, layer, component).getH2F("adcLdir_vs_z").fill(paddlePair.zPostCND(), Math.log( paddlePair.ADCL));
 							dataGroups.getItem(sector, layer, component).getH2F("adcLindir_vs_z").fill(paddleLength-paddlePair.zPostCND(), Math.log( paddlePair.ADCR));
 							//                             System.out.println(" ");
 							//                             System.out.println("z = " + hitPosition);
 							//                             System.out.println("ADCR = " + paddlePair.ADCR);
 							//                             System.out.println("ADCL = " + paddlePair.ADCL);
-						} else if (directHitPaddle == 1  ){//&& include ){ // && paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
+						} else if (paddlePair.COMP==2  ){//&& include ){ // && paddlePair.EVENT_START_TIME!=0.0 && Math.abs(cutPIDpion)<cutPIDpionVALUE) {
 							dataGroups.getItem(sector, layer, component).getH2F("adcRdir_vs_z").fill(paddlePair.zPostCND(), Math.log( paddlePair.ADCR));
 							dataGroups.getItem(sector, layer, component).getH2F("adcRindir_vs_z").fill(paddleLength-paddlePair.zPostCND(), Math.log( paddlePair.ADCL));
 						}

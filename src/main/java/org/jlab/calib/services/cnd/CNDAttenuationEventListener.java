@@ -395,14 +395,14 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 					//                        dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log(normalisingADCFactor * paddlePair.ADCR));
 					//                    }
 
-					if (directHitPaddle == 0 && paddlePair.ZPOS!=0.0) {
+					if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0) {
 						dataGroups.getItem(sector, layer, component).getH2F("adcL_vs_z").fill(hitPosition, Math.log((float)paddlePair.ADCL/paddlePair.ADCR));
 						//dataGroups.getItem(sector, layer, component).getH2F("adcL_vs_z").fill(hitPosition, Math.log(paddlePair.ADCR));
 
 						//                      System.out.println();
 						                     //    System.out.println("ADCL = " + (float)paddlePair.ADCL+" ADCR = " + (float)paddlePair.ADCR);
 						//                      System.out.println("logratio = " +  Math.log((float)paddlePair.ADCL/(float)paddlePair.ADCR));
-					} else if (directHitPaddle == 1 && paddlePair.ZPOS!=0.0) {
+					} else if (paddlePair.COMP==2 && paddlePair.ZPOS!=0.0) {
 						dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log((float)paddlePair.ADCR/paddlePair.ADCL));
 						//dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log(paddlePair.ADCL));
 

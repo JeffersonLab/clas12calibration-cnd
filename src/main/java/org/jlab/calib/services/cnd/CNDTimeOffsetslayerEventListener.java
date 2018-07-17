@@ -203,7 +203,8 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
                         HIST_BINS, HIST_X_MIN, HIST_X_MAX);
 
                 // create all the functions
-                F1D func = new F1D("func", "[height]", HIST_X_MIN, HIST_X_MAX);
+               // F1D func = new F1D("func", "[height]", HIST_X_MIN, HIST_X_MAX);
+                F1D func = new F1D("func", "[amp]*gaus(x,[mean],[sigma])", HIST_X_MIN, HIST_X_MAX);
                 func.setLineColor(FUNC_COLOUR);
                 func.setLineWidth(FUNC_LINE_WIDTH);
 
@@ -251,6 +252,7 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
                 //System.out.println("in histo ");
                 if(paddlePair.layerOffset()!=0.0 && paddlePair.CHARGE==-1){
                 dataGroups.getItem(sector, layer, component).getH1F("time_offset_layer").fill(paddlePair.layerOffset());
+               // System.out.println("start time "+paddlePair.EVENT_START_TIME);
                 }
                 //System.out.println("out histo ");
             }
@@ -269,30 +271,30 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
 
             double distributionLeftLeadingEdge = LeadingEdge(hist, FIT_HEIGHT_THRESHOLD);
             double distributionRightTrailingEdge = TrailingEdge(hist, FIT_HEIGHT_THRESHOLD);
-
+//
             double halfWidthOfDistribution = (distributionRightTrailingEdge - distributionLeftLeadingEdge) / 2.;
             double centreOfDistribution = distributionLeftLeadingEdge + halfWidthOfDistribution;
-            double centralRegionWidth = CENTRAL_REGION_TO_LOOK_FOR_DIP * (distributionRightTrailingEdge - distributionLeftLeadingEdge);
-
+//            double centralRegionWidth = CENTRAL_REGION_TO_LOOK_FOR_DIP * (distributionRightTrailingEdge - distributionLeftLeadingEdge);
+//
             double fitMin = distributionLeftLeadingEdge;
-            		
-//            		FitLimitOnLeftSideOfDistribution(hist,
-//                    centreOfDistribution,
-//                    centralRegionWidth,
-//                    FIT_HEIGHT_THRESHOLD);
 
             double fitMax = distributionRightTrailingEdge;
-            		
-//            		FitLimitOnRightSideOfDistribution(hist,
-//                    centreOfDistribution,
-//                    centralRegionWidth,
-//                    FIT_HEIGHT_THRESHOLD);
-            
+        
             F1D lrFunc = dataGroups.getItem(sector, layer, component).getF1D("func");
             lrFunc.setRange(fitMin, fitMax);
-
-            lrFunc.setParameter(0, (hist.getBinContent(hist.getMaximumBin()) * FIT_HEIGHT_THRESHOLD)); // height to draw line at
-
+            lrFunc.setParameter(0, (hist.getBinContent(hist.getMaximumBin()))); 
+           // lrFunc.setParLimits(0, (hist.getBinContent(hist.getMaximumBin()))*0.9, (hist.getBinContent(hist.getMaximumBin()))*1.1); 
+            lrFunc.setParameter(1, centreOfDistribution);
+            //lrFunc.setParLimits(1,centreOfDistribution*0.9, centreOfDistribution*1.1);
+            lrFunc.setParameter(2, 2.*halfWidthOfDistribution);
+            //lrFunc.setParLimits(2,2.*halfWidthOfDistribution*0.9, 2.*halfWidthOfDistribution*1.1);
+            
+            try {
+                DataFitter.fit(lrFunc, hist, "RQ");
+            } catch (Exception e) {
+                System.out.println("Fit error with sector "+sector+" layer "+layer+" component "+component);
+                e.printStackTrace();
+            }
         }
         
     }
@@ -413,9 +415,9 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
             double distributionLeftLeadingEdge = LeadingEdge(hist, fitHeight);
             double distributionRightTrailingEdge = TrailingEdge(hist, fitHeight);
 
-//            double halfWidthOfDistribution = (distributionRightTrailingEdge - distributionLeftLeadingEdge) / 2.;
-//            double centreOfDistribution = distributionLeftLeadingEdge + halfWidthOfDistribution;
-//            double centralRegionWidth = CENTRAL_REGION_TO_LOOK_FOR_DIP * (distributionRightTrailingEdge - distributionLeftLeadingEdge);            
+            double halfWidthOfDistribution = (distributionRightTrailingEdge - distributionLeftLeadingEdge) / 2.;
+            double centreOfDistribution = distributionLeftLeadingEdge + halfWidthOfDistribution;
+            double centralRegionWidth = CENTRAL_REGION_TO_LOOK_FOR_DIP * (distributionRightTrailingEdge - distributionLeftLeadingEdge);            
 
             double fitMin = distributionLeftLeadingEdge;
             		
@@ -432,7 +434,19 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
 //                    fitHeight);                    
 
             fit.setRange(fitMin, fitMax);
-            fit.setParameter(0, hist.getBinContent(hist.getMaximumBin()) * fitHeight);
+            fit.setParameter(0, (hist.getBinContent(hist.getMaximumBin()))); // height to draw line at
+			//fit.setParLimits(0, (hist.getBinContent(hist.getMaximumBin()))*0.9, (hist.getBinContent(hist.getMaximumBin()))*1.1);
+			fit.setParameter(1, centreOfDistribution); // height to draw line at
+			//fit.setParLimits(1,centreOfDistribution*0.9, centreOfDistribution*1.1);
+			fit.setParameter(2, 1.3*halfWidthOfDistribution); // height to draw line at
+
+			try {
+				DataFitter.fit(fit,hist, "RQ");
+				System.out.println("in adjust fit ");
+			} catch (Exception e) {
+
+				e.printStackTrace();
+			}
           
         }
 
@@ -504,18 +518,18 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
     
     public Double getCentreOfFit(int sector, int layer, int component) {
 
-        double centreOfFit = 0.0;
+        double centreOfFit = dataGroups.getItem(sector, layer, component).getF1D("func").getParameter(1);
 
-        double fitMin = dataGroups.getItem(sector, layer, component).getF1D("func").getMin();
-        double fitMax = dataGroups.getItem(sector, layer, component).getF1D("func").getMax();
-        
-        double middleOfFit = fitMax - fitMin;
-        double halfLengthOfFit = middleOfFit / 2.;
-
-        centreOfFit = fitMin + halfLengthOfFit;
-        
-        // Subtract value in x of the centre bin of the distribution:
-        centreOfFit = centreOfFit - CNDPaddlePair.NS_PER_CH;      
+//        double fitMin = dataGroups.getItem(sector, layer, component).getF1D("func").getMin();
+//        double fitMax = dataGroups.getItem(sector, layer, component).getF1D("func").getMax();
+//        
+//        double middleOfFit = fitMax - fitMin;
+//        double halfLengthOfFit = middleOfFit / 2.;
+//
+//        centreOfFit = fitMin + halfLengthOfFit;
+//        
+//        // Subtract value in x of the centre bin of the distribution:
+//        centreOfFit = centreOfFit - CNDPaddlePair.NS_PER_CH;      
 
         return centreOfFit;
     }
@@ -524,10 +538,9 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
 
         
 
-        double fitMin = dataGroups.getItem(sector, layer, component).getF1D("func").getMin();
-        double fitMax = dataGroups.getItem(sector, layer, component).getF1D("func").getMax();
         
-        double middleOfFit = fitMax - fitMin;
+        
+        double middleOfFit = dataGroups.getItem(sector, layer, component).getF1D("func").getParameter(2);
 
         return middleOfFit;
     }
@@ -711,10 +724,9 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
         //****Now find leading edge point
         int leading_bin = 0;
         double heightThreshold = (hist.getBinContent(hist.getMaximumBin()) * fitThreshold);
-        double maxOfDistribution = hist.getMax();
-        int binOfMaxOfDistribution = hist.getAxis().getBin(maxOfDistribution);
+        int binOfMaxOfDistribution = hist.getMaximumBin();
 
-        for (int i = 0; i < binOfMaxOfDistribution; i++) {
+        for (int i = binOfMaxOfDistribution; i > 0; i--) {
             //****Find leading edge bin with the threshold height
             if (hist.getBinContent(i) < (heightThreshold) && hist.getBinContent(i + 1) >= (heightThreshold)) {
                 leading_bin = i;
@@ -733,10 +745,9 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
         int trailing_bin = 0;
         double heightThreshold = (hist.getBinContent(hist.getMaximumBin()) * fitThreshold);
         int n_bins = hist.getXaxis().getNBins();
-        double meanOfDistribution = hist.getMean();
-        int binOfMeanOfDistribution = hist.getAxis().getBin(meanOfDistribution);
+        int binOfMaxOfDistribution = hist.getMaximumBin();
 
-        for (int i = n_bins; i > binOfMeanOfDistribution; i--) {
+        for (int i = binOfMaxOfDistribution ; i < n_bins; i++) {
             //****Find leading edge middle height bin
             //This test excludes the binning issues (assume one bin dips only)
             if (hist.getBinContent(i - 1) >= (heightThreshold) && hist.getBinContent(i) < (heightThreshold)) {

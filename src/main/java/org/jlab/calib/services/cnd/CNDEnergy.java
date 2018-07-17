@@ -420,14 +420,14 @@ public class CNDEnergy extends CNDCalibrationEngine{
 				double normalisingADCFactor = 0.0;
 				normalisingADCFactor = 3.0 / pathInPaddle;
 				
-				if (directHitPaddle == 0 && paddlePair.ZPOS!=0.0){ 
+				if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0){ 
 					dataGroups.getItem(sector, layer, component).getH2F("logratioL").fill(hitPosition, Math.log( (float)paddlePair.ADCL/paddlePair.ADCR));
 					
 					if(paddlePair.CHARGE==-1){
 					dataGroups.getItem(sector, layer, component).getH1F("logmeanL").fill(Math.sqrt( (float)paddlePair.ADCR*paddlePair.ADCL*normalisingADCFactor*normalisingADCFactor));
 					}
 
-				} else if (directHitPaddle == 1 && paddlePair.ZPOS!=0.0){ 
+				} else if (paddlePair.COMP==2 && paddlePair.ZPOS!=0.0){ 
 					dataGroups.getItem(sector, layer, component).getH2F("logratioR").fill(hitPosition, Math.log( (float)paddlePair.ADCR/paddlePair.ADCL));
 					
 					if(paddlePair.CHARGE==-1){

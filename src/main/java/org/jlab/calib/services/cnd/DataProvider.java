@@ -246,11 +246,12 @@ public class DataProvider {
 
 				int sector = (int) hitsBank.getByte("sector", hitIndex);
 				int layer = (int) hitsBank.getByte("layer", hitIndex);
-				//int component = (int) hitsBank.getShort("component", hitIndex);
+				int c = (int) hitsBank.getShort("component", hitIndex);
 				// ********************************
 				int component = 1;
 
 				CNDPaddlePair paddlePair = new CNDPaddlePair(sector, layer, component);
+				paddlePair.COMP=c;
 
 				int adcIdx1 = hitsBank.getShort("indexLadc", hitIndex);
 				int adcIdx2 = hitsBank.getShort("indexRadc", hitIndex);
@@ -308,6 +309,16 @@ public class DataProvider {
 
 
 					
+				}
+				
+				if (event.hasBank("RUN::config")) {
+					DataBank eventrunBank = event.getBank("RUN::config");
+
+					if (eventrunBank.getLong("timestamp", 0) != -1) {
+						                      
+						paddlePair.TIME_STAMP = eventrunBank.getLong("timestamp", 0);
+						//System.out.println("phase = " + paddlePair.TRIGGER_PHASE);
+					}				
 				}
 //
 //				if (event.hasBank("RUN::rf")) {

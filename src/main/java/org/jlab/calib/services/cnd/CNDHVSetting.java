@@ -232,11 +232,11 @@ public class CNDHVSetting extends CNDCalibrationEngine {
 			if((softTrigger && include) || (!softTrigger)){
 
 				// only select the indirect adc (ask for the larger tdc)
-				if (paddlePair.ADCL > CNDPaddlePair.unallowedADCValue && paddlePair.leftRightTimeDiff()-leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)>0){
+				if (paddlePair.ADCL > CNDPaddlePair.unallowedADCValue && paddlePair.COMP==1){
 					dataGroups.getItem(sector,layer,component).getH1F("adcL").fill(paddlePair.ADCL);
 					//                            System.out.println("paddlePair.ADCL = " + paddlePair.ADCL);
 				}
-				if (paddlePair.ADCR > CNDPaddlePair.unallowedADCValue && paddlePair.leftRightTimeDiff()-leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)<0){
+				if (paddlePair.ADCR > CNDPaddlePair.unallowedADCValue && paddlePair.COMP==2){
 					dataGroups.getItem(sector,layer,component).getH1F("adcR").fill(paddlePair.ADCR);
 					//                            System.out.println("paddlePair.ADCR = " + paddlePair.ADCR);                            
 				}

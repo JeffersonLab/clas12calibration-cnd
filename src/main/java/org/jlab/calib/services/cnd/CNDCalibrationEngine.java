@@ -120,7 +120,7 @@ public class CNDCalibrationEngine extends CalibrationEngine {
 		veffValues = new CalibrationConstants(3,
 				"veff_L/F:veff_L_err/F:veff_R/F:veff_R_err/F");
 		uturnTlossValues = new CalibrationConstants(3,
-				"uturn_tloss/F:uturn_tloss_err/F");
+				"uturn_tloss/F:adjusted_LR_offset/F");
 		attenuationValues = new CalibrationConstants(3,
 				"attlen_L/F:attlen_L_err/F:attlen_R/F:attlen_R_err/F");
 		layerValues = new CalibrationConstants(3,

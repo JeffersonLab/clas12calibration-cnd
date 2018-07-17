@@ -19,6 +19,8 @@ public class CNDPaddlePair {
 
     private DetectorDescriptor desc = new DetectorDescriptor();
 
+    public int COMP = 0;
+    
     public int ADCL = 0;
     public int ADCR = 0;
     public int TDCL = 0;
@@ -47,6 +49,7 @@ public class CNDPaddlePair {
     public double TOF_TIME = 0.0;
     public int PARTICLE_ID = -1;
     public double EVENT_START_TIME = 0.0;
+    public double TIME_STAMP = 0.0;
 
     public static final int PID_ELECTRON = 11;
     public static final int PID_PION = 211;
@@ -141,6 +144,14 @@ public class CNDPaddlePair {
     //		return (this.ZPOS != 0)
     //				&& (Math.abs(position() - this.zPosCTOF()) < 20.0);
     //	}
+//    public void setcomp(int c){
+//    	this.COMP=c;
+//    }
+    
+    public int comp(){
+    	return this.COMP;
+    }
+    
     public double uturnTloss() {
 
         double uturnTloss = 0.0;
@@ -424,6 +435,29 @@ public class CNDPaddlePair {
         return len;
 
     }
+    
+    public double paddleDownstreamEdge() {
+
+        double len = 0.0;
+
+        if (cnd == "CND") {
+            int layer = this.getDescriptor().getLayer();
+
+            if (layer == 1) {
+                len = 26.976;
+            } else if (layer == 2) {
+                len = 31.804;
+            } else if (layer == 3) {
+                len = 35.232;
+            }
+        } else {
+            //Shouldn't reach this...
+            len = 0.0;
+        }
+
+        return len;
+
+    }
 
     public double leftRightTimeDiff() {
         return (tdcToTime(TDCL) - tdcToTime(TDCR));
@@ -454,8 +488,11 @@ public class CNDPaddlePair {
         double t_tof = (PATH_LENGTH / (beta * 29.98));
 
 
-        if (EVENT_START_TIME != 0.0 && t_tof!=0.0 && TRACK_ID!=-1) {
-            layerOffset = leftRightTimeAverage() - EVENT_START_TIME - t_tof
+        if (EVENT_START_TIME != 0.0 && t_tof!=0.0 && TRACK_ID!=-1 && TIME_STAMP!=-1) {
+        	
+        	double phase=4.*((TIME_STAMP+1.)%6.);
+        	
+            layerOffset = leftRightTimeAverage() -phase - EVENT_START_TIME - t_tof
                     - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffset()/2);
         }
         return (layerOffset);

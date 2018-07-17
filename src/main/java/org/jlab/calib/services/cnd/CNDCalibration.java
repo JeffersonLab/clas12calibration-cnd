@@ -1292,7 +1292,7 @@ ChangeListener {
 		c.gridx = 1;
 		c.gridy = 0;
 		LRList.addItem("no field");   
-		LRList.addItem("magnetic field on");  
+		LRList.addItem("magnetic field on"); 
 		LRList.addActionListener(this);
 		LRPanel.add(LRList,c);
 		// time limit 

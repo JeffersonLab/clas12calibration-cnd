@@ -416,13 +416,13 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 
 					// hitPosition from tracking:
 					hitPosition = paddlePair.zPosCND();                    
-					if (directHitPaddle == 0 && paddlePair.ZPOS!=0.0 ){
+					if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0  && Math.abs((time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){
 						dataGroups.getItem(sector,layer,component).getH2F("effVLHist").fill( hitPosition, 0.5*(time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)));
 						//                        System.out.println("(tdc[0]-tdc[1]) = " + (tdc[0]-tdc[1]));
 						//                        System.out.println("(time[0]-time[1]) = " + (time[0]-time[1]));
 						//                        System.out.println("");
 						//                        dataGroups.getItem(sector,layer,component).getH2F("effVLHist").fill( hitPosition, 0.5*(tdc[0]-tdc[1]));
-					} else if (directHitPaddle == 1 && paddlePair.ZPOS!=0.0){
+					} else if (paddlePair.COMP==2 && paddlePair.ZPOS!=0.0 && Math.abs((time[1]-time[0]-leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){
 						dataGroups.getItem(sector,layer,component).getH2F("effVRHist").fill( hitPosition, 0.5*(time[1]-time[0]-leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)));
 						//                        dataGroups.getItem(sector,layer,component).getH2F("effVRHist").fill( hitPosition, 0.5*(tdc[1]-tdc[0]));
 					}                    

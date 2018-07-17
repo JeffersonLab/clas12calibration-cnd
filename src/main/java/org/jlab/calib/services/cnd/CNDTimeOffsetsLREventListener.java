@@ -54,14 +54,14 @@ import org.jlab.utils.groups.IndexedList;
 public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 
 
-	
+
 	// option (would be good to add to the graphical interface)
 	public final boolean softTrigger= false;
 
 	//mode 
 	//0 is for no field, 1 for field on
 	public int mode;
-	
+
 	// hists
 	public final int LEFT_RIGHT = 0;
 
@@ -78,12 +78,12 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 	public static int HIST_BINS = 400;
 	static double HIST_X_MIN = -1 *2* ((double) (HIST_BINS) * (CNDPaddlePair.NS_PER_CH));
 	static double HIST_X_MAX = +1 *2* ((double) (HIST_BINS) * (CNDPaddlePair.NS_PER_CH));   
-//	    static int HIST_BINS = 100;
-//	    static double HIST_X_MIN = -8;
-//	    static double HIST_X_MAX = 8;
+	//	    static int HIST_BINS = 100;
+	//	    static double HIST_X_MIN = -8;
+	//	    static double HIST_X_MAX = 8;
 
 	//Height threshold for leading and trailing edge calculations
-	public double FIT_HEIGHT_THRESHOLD = 0.3;
+	public double FIT_HEIGHT_THRESHOLD = 0.5;
 
 	//Height threshold for depletion zone search
 	public double FIT_THRESHOLD = 0.5;
@@ -103,17 +103,17 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 		calib.setName("/calibration/cnd/TimeOffsets_LR");
 		calib.setPrecision(3);
 	}
-	
+
 	public void setConstraints() {
 		calib.addConstraint(3, -MAX_LEFTRIGHT, MAX_LEFTRIGHT);
 		calib.addConstraint(4, -MAX_LEFTRIGHT_ERR, MAX_LEFTRIGHT_ERR);
 	}
 
 
-//	@Override
-//	public void populatePrevCalib() {
-//		prevCalRead = true;
-//	}        
+	//	@Override
+	//	public void populatePrevCalib() {
+	//		prevCalRead = true;
+	//	}        
 
 	//    @Override
 	//    public void populatePrevCalib() {
@@ -223,20 +223,36 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 		for (int sector = 1; sector <= 24; sector++) {
 			for (int layer = 1; layer <= 3; layer++) {
 				int component = 1;
-
+				
 				// create all the histograms
 				H1F hist = new H1F("time_offset_LR",
 						"Left-right time diff Sector " + sector + " Layer " + layer + " Component" + component,
 						HIST_BINS, HIST_X_MIN, HIST_X_MAX);
 
-				// create all the functions
-				F1D lrFunc = new F1D("lrFunc", "[height]", -8.0, 8.0);
-				lrFunc.setLineColor(FUNC_COLOUR);
-				lrFunc.setLineWidth(FUNC_LINE_WIDTH);
-
 				DataGroup dg = new DataGroup(1, 1);
 				dg.addDataSet(hist, LEFT_RIGHT);
-				dg.addDataSet(lrFunc, LEFT_RIGHT);
+				// create all the functions
+				F1D lrFunc;
+				if (mode==0){
+					
+					lrFunc = new F1D("lrFunc", "[height]", HIST_X_MIN, HIST_X_MAX);
+					lrFunc.setLineColor(FUNC_COLOUR);
+					lrFunc.setLineWidth(FUNC_LINE_WIDTH);
+
+					dg.addDataSet(lrFunc, LEFT_RIGHT);
+				}
+				else if(mode==1){
+
+					lrFunc = new F1D("lrFunc", "[amp]*gaus(x,[mean],[sigma])", HIST_X_MIN, HIST_X_MAX);
+					lrFunc.setLineColor(FUNC_COLOUR);
+					lrFunc.setLineWidth(FUNC_LINE_WIDTH);
+
+					dg.addDataSet(lrFunc, LEFT_RIGHT);
+				}
+
+
+
+
 
 				dataGroups.add(dg, sector, layer, component);
 				setPlotTitle(sector, layer, component);
@@ -292,12 +308,12 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 				}
 
 
-				if((softTrigger && include) || (!softTrigger)){
+				if (paddlePair.ZPOS!=0.0 && paddlePair.ZPOS<(paddlePair.paddleDownstreamEdge()-10.)){
 
 					// Fill all histograms
 					dataGroups.getItem(sector, layer, component).getH1F("time_offset_LR").fill(paddlePair.rightLeftTimeDiff());
 					//System.out.println(paddlePair.TRACK_ID);
-//					paddlePair.show();
+					//					paddlePair.show();
 					//                dataGroups.getItem(sector, layer, component).getH1F("time_offset_LR").fill(paddlePair.rightLeftTimeDiff());
 				}
 			}
@@ -308,7 +324,7 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 	public void fit(int sector, int layer, int component,
 			double minRange, double maxRange) {
 
-		// System.out.println("S L C = " + sector + " " + layer + " " + component);
+		System.out.println("S L C = " + sector + " " + layer + " " + component);
 
 		H1F lrHist = dataGroups.getItem(sector, layer, component).getH1F("time_offset_LR");
 
@@ -324,37 +340,51 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 			double centralRegionWidth = CENTRAL_REGION_TO_LOOK_FOR_DIP * (distributionRightTrailingEdge - distributionLeftLeadingEdge);
 
 			//this has to be used if want to fit the uturn deep which DOESN't exist in real data
-			
+
 			double fitMin;
 			double fitMax;
+			F1D lrFunc= dataGroups.getItem(sector, layer, component).getF1D("lrFunc");;
 			if(mode==0){
-			fitMin = FitLimitOnLeftSideOfDistribution(lrHist,
-					centreOfDistribution,
-					centralRegionWidth,
-					FIT_THRESHOLD);
+				fitMin = FitLimitOnLeftSideOfDistribution(lrHist,
+						centreOfDistribution,
+						centralRegionWidth,
+						FIT_THRESHOLD);
 
-			fitMax = FitLimitOnRightSideOfDistribution(lrHist,
-					centreOfDistribution,
-					centralRegionWidth,
-					FIT_THRESHOLD);
+				fitMax = FitLimitOnRightSideOfDistribution(lrHist,
+						centreOfDistribution,
+						centralRegionWidth,
+						FIT_THRESHOLD);
 			}
-			
+
 			else{
-			fitMin = FitDistributionFieldLeft(lrHist,
-					centreOfDistribution,
-					centralRegionWidth,
-					FIT_THRESHOLD);
-			fitMax = FitDistributionFieldRight(lrHist,
-					centreOfDistribution,
-					centralRegionWidth,
-					FIT_THRESHOLD);
+				fitMin = distributionLeftLeadingEdge;
+				fitMax = distributionRightTrailingEdge;
+
 			}
-			
-			F1D lrFunc = dataGroups.getItem(sector, layer, component).getF1D("lrFunc");
+
+
 			lrFunc.setRange(fitMin, fitMax);
 
-			lrFunc.setParameter(0, (lrHist.getBinContent(lrHist.getMaximumBin()) * FIT_THRESHOLD)); // height to draw line at
+			if(mode==1){
+				lrFunc.setParameter(0, (lrHist.getBinContent(lrHist.getMaximumBin()))); // height to draw line at
+				lrFunc.setParLimits(0, (lrHist.getBinContent(lrHist.getMaximumBin()))*0.9, (lrHist.getBinContent(lrHist.getMaximumBin()))*1.1);
+				lrFunc.setParameter(1, centreOfDistribution); // height to draw line at
+				lrFunc.setParLimits(1,centreOfDistribution*0.9, centreOfDistribution*1.1);
+				lrFunc.setParameter(2, 1.3*halfWidthOfDistribution); // height to draw line at
 
+				try {
+					DataFitter.fit(lrFunc,lrHist, "RQ");
+				} catch (Exception e) {
+					System.out.println("Fit error with sector "+sector+" layer "+layer+" component "+component);
+					e.printStackTrace();
+				}
+
+
+			}
+			else{
+				//System.out.println("yo " );
+				lrFunc.setParameter(0, (lrHist.getBinContent(lrHist.getMaximumBin()) * FIT_THRESHOLD)); // height to draw line at
+			}
 		}
 
 	}
@@ -473,46 +503,93 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 
 		if (hist.getEntries() != 0) {  //Need non empty histograms for this method...
 
-			double distributionLeftLeadingEdge = LeadingEdge(hist, FIT_HEIGHT_THRESHOLD);
-			double distributionRightTrailingEdge = TrailingEdge(hist, FIT_HEIGHT_THRESHOLD);
+			double distributionLeftLeadingEdge = LeadingEdge(hist, fitHeight);
+			double distributionRightTrailingEdge = TrailingEdge(hist, fitHeight);
 
 			double halfWidthOfDistribution = (distributionRightTrailingEdge - distributionLeftLeadingEdge) / 2.;
 			double centreOfDistribution = distributionLeftLeadingEdge + halfWidthOfDistribution;
 			double centralRegionWidth = CENTRAL_REGION_TO_LOOK_FOR_DIP * (distributionRightTrailingEdge - distributionLeftLeadingEdge);            
 
 
+
 			double fitMin;
 			double fitMax;
+
 			if(mode==0){
-			fitMin = FitLimitOnLeftSideOfDistribution(hist,
-					centreOfDistribution,
-					centralRegionWidth,
-					fitHeight);
+				fitMin = FitLimitOnLeftSideOfDistribution(hist,
+						centreOfDistribution,
+						centralRegionWidth,
+						FIT_THRESHOLD);
 
-			fitMax = FitLimitOnRightSideOfDistribution(hist,
-					centreOfDistribution,
-					centralRegionWidth,
-					fitHeight);
+				fitMax = FitLimitOnRightSideOfDistribution(hist,
+						centreOfDistribution,
+						centralRegionWidth,
+						FIT_THRESHOLD);
 			}
-			
-			else{
-				//System.out.println("here");
-				fitMin = FitDistributionFieldLeft(hist,
-						centreOfDistribution,
-						centralRegionWidth,
-						fitHeight);
-				fitMax = FitDistributionFieldRight(hist,
-						centreOfDistribution,
-						centralRegionWidth,
-						fitHeight);
-			}   
-			
-			fit.setRange(fitMin, fitMax);
-			fit.setParameter(0, hist.getBinContent(hist.getMaximumBin()) * fitHeight);
 
+			else{
+				fitMin = distributionLeftLeadingEdge;
+				fitMax = distributionRightTrailingEdge;
+
+			}
+
+
+			fit.setRange(fitMin, fitMax);
+
+			if(mode==1){
+				fit.setParameter(0, (hist.getBinContent(hist.getMaximumBin()))); // height to draw line at
+				fit.setParLimits(0, (hist.getBinContent(hist.getMaximumBin()))*0.9, (hist.getBinContent(hist.getMaximumBin()))*1.1);
+				fit.setParameter(1, centreOfDistribution); // height to draw line at
+				fit.setParLimits(1,centreOfDistribution*0.9, centreOfDistribution*1.1);
+				fit.setParameter(2, 1.3*halfWidthOfDistribution); // height to draw line at
+
+				try {
+					DataFitter.fit(fit,hist, "RQ");
+					System.out.println("in adjust fit ");
+				} catch (Exception e) {
+
+					e.printStackTrace();
+				}
+
+
+			}
+			else{
+				fit.setParameter(0, (hist.getBinContent(hist.getMaximumBin()) * FIT_THRESHOLD)); // height to draw line at
+			}
 		}
 
-	}    
+		//			double fitMin;
+		//			double fitMax;
+		//			if(mode==0){
+		//			fitMin = FitLimitOnLeftSideOfDistribution(hist,
+		//					centreOfDistribution,
+		//					centralRegionWidth,
+		//					fitHeight);
+		//
+		//			fitMax = FitLimitOnRightSideOfDistribution(hist,
+		//					centreOfDistribution,
+		//					centralRegionWidth,
+		//					fitHeight);
+		//			}
+		//			
+		//			else{
+		//				//System.out.println("here");
+		//				fitMin = FitDistributionFieldLeft(hist,
+		//						centreOfDistribution,
+		//						centralRegionWidth,
+		//						fitHeight);
+		//				fitMax = FitDistributionFieldRight(hist,
+		//						centreOfDistribution,
+		//						centralRegionWidth,
+		//						fitHeight);
+		//			}   
+		//			
+		//			fit.setRange(fitMin, fitMax);
+		//			fit.setParameter(0, hist.getBinContent(hist.getMaximumBin()) * fitHeight);
+
+	}
+
+
 
 
 
@@ -582,17 +659,18 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 
 		double centreOfFit = 0.0;
 
-		double fitMin = dataGroups.getItem(sector, layer, component).getF1D("lrFunc").getMin();
-		double fitMax = dataGroups.getItem(sector, layer, component).getF1D("lrFunc").getMax();
-
-		double middleOfFit = fitMax - fitMin;
-		double halfLengthOfFit = middleOfFit / 2.;
-
-		centreOfFit = fitMin + halfLengthOfFit;
-
-		// Subtract value in x of the centre bin of the distribution:
+		if(mode==1){centreOfFit =dataGroups.getItem(sector, layer, component).getF1D("lrFunc").getParameter(1);}
+		else{	double fitMin = dataGroups.getItem(sector, layer, component).getF1D("lrFunc").getMin();
+				double fitMax = dataGroups.getItem(sector, layer, component).getF1D("lrFunc").getMax();
+		
+				double middleOfFit = fitMax - fitMin;
+				double halfLengthOfFit = middleOfFit / 2.;
+		
+				centreOfFit = fitMin + halfLengthOfFit;
+		
+				// Subtract value in x of the centre bin of the distribution:
 		centreOfFit = centreOfFit - CNDPaddlePair.NS_PER_CH;      
-
+		}
 		return centreOfFit;
 	}
 
@@ -769,16 +847,16 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 
 	}    
 
+
 	public double LeadingEdge(H1F hist, double fitThreshold) {
 
 		//*************************************
 		//****Now find leading edge point
 		int leading_bin = 0;
 		double heightThreshold = (hist.getBinContent(hist.getMaximumBin()) * fitThreshold);
-		double meanOfDistribution = hist.getMean();
-		int binOfMeanOfDistribution = hist.getAxis().getBin(meanOfDistribution);
+		int binOfMaxOfDistribution = hist.getMaximumBin();
 
-		for (int i = 0; i < binOfMeanOfDistribution; i++) {
+		for (int i = binOfMaxOfDistribution; i > 0; i--) {
 			//****Find leading edge bin with the threshold height
 			if (hist.getBinContent(i) < (heightThreshold) && hist.getBinContent(i + 1) >= (heightThreshold)) {
 				leading_bin = i;
@@ -790,6 +868,30 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 
 	}
 
+
+	//old version
+	//	public double LeadingEdge(H1F hist, double fitThreshold) {
+	//
+	//		//*************************************
+	//		//****Now find leading edge point
+	//		int leading_bin = 0;
+	//		double heightThreshold = (hist.getBinContent(hist.getMaximumBin()) * fitThreshold);
+	//		double meanOfDistribution = hist.getMean();
+	//		int binOfMeanOfDistribution = hist.getAxis().getBin(meanOfDistribution);
+	//
+	//		for (int i = 0; i < binOfMeanOfDistribution; i++) {
+	//			//****Find leading edge bin with the threshold height
+	//			if (hist.getBinContent(i) < (heightThreshold) && hist.getBinContent(i + 1) >= (heightThreshold)) {
+	//				leading_bin = i;
+	//				break;
+	//			}
+	//		}
+	//
+	//		return hist.getAxis().getBinCenter(leading_bin);
+	//
+	//	}
+
+
 	public double TrailingEdge(H1F hist, double fitThreshold) {
 
 		//*************************************
@@ -797,10 +899,9 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 		int trailing_bin = 0;
 		double heightThreshold = (hist.getBinContent(hist.getMaximumBin()) * fitThreshold);
 		int n_bins = hist.getXaxis().getNBins();
-		double meanOfDistribution = hist.getMean();
-		int binOfMeanOfDistribution = hist.getAxis().getBin(meanOfDistribution);
+		int binOfMaxOfDistribution = hist.getMaximumBin();
 
-		for (int i = n_bins; i > binOfMeanOfDistribution; i--) {
+		for (int i = binOfMaxOfDistribution ; i < n_bins; i++) {
 			//****Find leading edge middle height bin
 			//This test excludes the binning issues (assume one bin dips only)
 			if (hist.getBinContent(i - 1) >= (heightThreshold) && hist.getBinContent(i) < (heightThreshold)) {
@@ -811,6 +912,29 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 
 		return hist.getAxis().getBinCenter(trailing_bin);
 	}
+
+	//old version
+	//	public double TrailingEdge(H1F hist, double fitThreshold) {
+	//
+	//		//*************************************
+	//		//****Now find trailing edge point
+	//		int trailing_bin = 0;
+	//		double heightThreshold = (hist.getBinContent(hist.getMaximumBin()) * fitThreshold);
+	//		int n_bins = hist.getXaxis().getNBins();
+	//		double meanOfDistribution = hist.getMean();
+	//		int binOfMeanOfDistribution = hist.getAxis().getBin(meanOfDistribution);
+	//
+	//		for (int i = n_bins; i > binOfMeanOfDistribution; i--) {
+	//			//****Find leading edge middle height bin
+	//			//This test excludes the binning issues (assume one bin dips only)
+	//			if (hist.getBinContent(i - 1) >= (heightThreshold) && hist.getBinContent(i) < (heightThreshold)) {
+	//				trailing_bin = i;
+	//				break;
+	//			}
+	//		}
+	//
+	//		return hist.getAxis().getBinCenter(trailing_bin);
+	//	}
 
 	//            int leadingFitBin = 0;        
 	//        for (int i = firstBin; i < lastBin; i++) {
@@ -879,7 +1003,7 @@ public class CNDTimeOffsetsLREventListener extends CNDCalibrationEngine {
 		return hist.getAxis().getBinCenter(trailing_bin);
 
 	}
-	
+
 	public double FitDistributionFieldLeft(H1F hist, double distributionCentre, double widthOfCentralRegion, double fitThreshold) {
 
 		//*************************************
