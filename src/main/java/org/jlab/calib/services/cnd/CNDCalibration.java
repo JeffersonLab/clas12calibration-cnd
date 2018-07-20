@@ -1075,14 +1075,18 @@ ChangeListener {
 		stepOuterPanel.add(stepPanel, BorderLayout.NORTH);
 		GridBagConstraints c = new GridBagConstraints();
 
+		int gridy=0;
 		for (int i=0; i< engines.length; i++) {
-			c.gridx = 0; c.gridy = i;
-			c.anchor = c.WEST;
-			stepChecks[i].setName(engines[i].stepName);
-			stepChecks[i].setText(engines[i].stepName);
-			stepChecks[i].setSelected(false);
-			stepChecks[i].addActionListener(this);
-			stepPanel.add(stepChecks[i],c);
+			if(i== HV || i== TIME_OFFSETS_RF || i== TDC_CONV )continue;
+				c.gridx = 0; c.gridy = gridy;
+				gridy++;
+				c.anchor = c.WEST;
+				stepChecks[i].setName(engines[i].stepName);
+				stepChecks[i].setText(engines[i].stepName);
+				stepChecks[i].setSelected(false);
+				stepChecks[i].addActionListener(this);
+				stepPanel.add(stepChecks[i],c);
+			
 		}
 		JPanel butPage1 = new configButtonPanel(this, true, "Next");
 		stepOuterPanel.add(butPage1, BorderLayout.SOUTH);
@@ -1473,7 +1477,7 @@ ChangeListener {
 
 		JPanel butPage7 = new configButtonPanel(this, true, "Next");
 		utOuterPanel.add(butPage7, BorderLayout.SOUTH);
-		configPane.add("Uturn Time Loss", utOuterPanel); 
+		configPane.add("Uturn Time Loss and LR adjusted", utOuterPanel); 
 
 		// att options
 		JPanel attOuterPanel = new JPanel(new BorderLayout());

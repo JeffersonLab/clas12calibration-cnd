@@ -193,7 +193,7 @@ public class CNDPaddlePair {
             constantColumnName = "veff_R";
         }
 
-        if (cnd == "CND") {
+        if (cnd == "CND" ) {
                     veff1 = CNDCalibrationEngine.veffValues.getDoubleValue(constantColumnName,
                                     desc.getSector(), desc.getLayer(), desc.getComponent());
                     if(veff1!=0.0){
@@ -233,6 +233,24 @@ public class CNDPaddlePair {
     	
     	return LRoffset;
     }
+    
+    public double LRoffsetad(){
+    	double LRoffset =0.0;
+    	double LRoffset1 =0.0;
+    	
+    	 if (cnd == "CND" ) {
+    		 LRoffset1 = CNDCalibrationEngine.uturnTlossValues.getDoubleValue("adjusted_LR_offset",
+                     desc.getSector(), desc.getLayer(), desc.getComponent());
+    		 if(LRoffset1!=0.0){
+    			 LRoffset=LRoffset1;
+    		 }
+    		 
+             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+         }
+    	
+    	return LRoffset;
+    }
+    
     //	public double p2p() {
     //		double p2p = 0.0;
     //		if (cnd == "CND") {
@@ -493,7 +511,7 @@ public class CNDPaddlePair {
         	double phase=4.*((TIME_STAMP+1.)%6.);
         	
             layerOffset = leftRightTimeAverage() -phase - EVENT_START_TIME - t_tof
-                    - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffset()/2);
+                    - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2);
         }
         return (layerOffset);
     }
@@ -510,7 +528,7 @@ public class CNDPaddlePair {
 
          if (this.RF_TIME != 0.0 && t_tof!=0.0 && TRACK_ID!=-1) {
              rftime = leftRightTimeAverage() - this.RF_TIME - t_tof
-                     - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffset()/2);
+                     - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2);
          }
      	
 

@@ -237,6 +237,7 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 				for (int layer = 1; layer <= 3; layer++) {
 					int component = 1;
 
+					veffValues.addEntry(sector, layer, component);
 					veffValues.setDoubleValue(EXPECTED_EFFV,
 							"veff_L", sector, layer, component);                    
 					veffValues.setDoubleValue(ALLOWED_DIFF,

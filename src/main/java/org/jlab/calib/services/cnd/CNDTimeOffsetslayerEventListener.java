@@ -81,7 +81,7 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
 
     public CNDTimeOffsetslayerEventListener() {
 
-        stepName = "TimeOffsets_layer";
+        stepName = "Global TimeOffset";
         fileNamePrefix = "CND_CALIB_TIMEOFFSETS_LAYER";
         // get file name here so that each timer update overwrites it
         filename = nextFileName();

@@ -138,7 +138,7 @@ public class CNDUturnTlossEventListener extends CNDCalibrationEngine {
 
 	public CNDUturnTlossEventListener() {
 
-		stepName = "UturnTloss";
+		stepName = "UturnTloss and LR offset adjusted";
 		fileNamePrefix = "CND_CALIB_UTURNTLOSS_";
 		// get file name here so that each timer update overwrites it
 		filename = nextFileName();
@@ -231,6 +231,7 @@ public class CNDUturnTlossEventListener extends CNDCalibrationEngine {
 
 					int layer_index = layer - 1;
 
+					uturnTlossValues.addEntry(sector, layer, component);
 					uturnTlossValues.setDoubleValue(EXPECTED_UTURNTLOSS_LAYER_VALUES[layer_index],
 							"uturn_tloss", sector, layer, component);                    
 					uturnTlossValues.setDoubleValue(ALLOWED_DIFF_LAYER_VALUES[layer_index],
@@ -976,19 +977,19 @@ public class CNDUturnTlossEventListener extends CNDCalibrationEngine {
 		try { 
 
 			// Open the output file
-			File outputFile = new File(filename+"_uturn");
+			File outputFile = new File("uturn_LRad_"+filename);
 			FileWriter outputFw = new FileWriter(outputFile.getAbsoluteFile());
 			BufferedWriter outputBw = new BufferedWriter(outputFw);
 
 			for (int i=0; i<calib.getRowCount(); i++) {
 				String line = new String();
-				for (int j=0; j<4; j++) {
+				for (int j=0; j<calib.getColumnCount(); j++) {
 					line = line+calib.getValueAt(i, j);
 					if (j<calib.getColumnCount()-1) {
 						line = line+" ";
 					}
 				}
-				line = line+"0.0";
+				
 				outputBw.write(line);
 				outputBw.newLine();
 			}
@@ -1005,7 +1006,7 @@ public class CNDUturnTlossEventListener extends CNDCalibrationEngine {
 		try { 
 
 			// Open the output file
-			File outputFile = new File(filename+"_LRoffset");
+			File outputFile = new File("LRoffset_adjusted_"+filename);
 			FileWriter outputFw = new FileWriter(outputFile.getAbsoluteFile());
 			BufferedWriter outputBw = new BufferedWriter(outputFw);
 

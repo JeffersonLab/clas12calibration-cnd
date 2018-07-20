@@ -246,12 +246,12 @@ public class DataProvider {
 
 				int sector = (int) hitsBank.getByte("sector", hitIndex);
 				int layer = (int) hitsBank.getByte("layer", hitIndex);
-				int c = (int) hitsBank.getShort("component", hitIndex);
+				//int c = (int) hitsBank.getShort("component", hitIndex);
 				// ********************************
 				int component = 1;
 
 				CNDPaddlePair paddlePair = new CNDPaddlePair(sector, layer, component);
-				paddlePair.COMP=c;
+				
 
 				int adcIdx1 = hitsBank.getShort("indexLadc", hitIndex);
 				int adcIdx2 = hitsBank.getShort("indexRadc", hitIndex);
@@ -266,7 +266,29 @@ public class DataProvider {
 						adcBank.getInt("ADC", adcIdx2),
 						tdcBank.getInt("TDC", tdcIdx1),
 						tdcBank.getInt("TDC", tdcIdx2));
-
+				
+				
+				//find the paddle using the veff and LR offset
+				int c=0;
+				double vL=paddlePair.veff(1);
+				double vR=paddlePair.veff(2);
+				double LRad=paddlePair.LRoffsetad();
+				//System.out.println(" veff1 "+vL);System.out.println(" LR "+LRad);
+				
+				double delta= paddlePair.paddleLength()*((1./vL)-(1./vR));
+				double deltaR= (paddlePair.TDCL*0.0234) - (paddlePair.TDCR*0.0234-LRad);
+				
+				if (deltaR<delta) {
+					c=1;
+				}
+				else if (deltaR>delta) {
+					c=2;
+				}
+				else continue;
+				
+				
+				paddlePair.COMP=c;
+				
 				// co-ordinates of track wrt to middle of the counter from CVT
 				double tx = hitsBank.getFloat("tx", hitIndex);
 				double ty = hitsBank.getFloat("ty", hitIndex);
