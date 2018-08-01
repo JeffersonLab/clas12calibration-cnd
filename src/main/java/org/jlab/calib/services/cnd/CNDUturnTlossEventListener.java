@@ -73,7 +73,7 @@ public class CNDUturnTlossEventListener extends CNDCalibrationEngine {
 	public final int OVERRIDE_RIGHT = 1;
 
 	public final double[] EXPECTED_UTURNTLOSS_LAYER_VALUES = {0.6,1.2,1.7};
-	public final double[] ALLOWED_DIFF_LAYER_VALUES = {0.06,0.12,0.17};
+	public final double[] ALLOWED_DIFF_LAYER_VALUES = {0.0,0.0,0.0};
 	public final double EXPECTED_VEFF = 16.0;
 
 	public final double EXPECTED_UTURNTLOSS = 1.0;
@@ -406,14 +406,16 @@ public class CNDUturnTlossEventListener extends CNDCalibrationEngine {
 					// hitPosition from tracking:
 
 					hitPosition = paddlePair.zPosCND();  
-
-					if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0 && Math.abs((time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){
+//  directHitPaddle == 0
+					if (  paddlePair.COMP==1 && paddlePair.ZPOS!=0.0 && Math.abs((time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){
 						//if ( paddlePair.ZPOS!=0.0 ){
 						dataGroups.getItem(sector,layer,component).getH2F("effVLHist").fill( hitPosition, 0.5*(time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)));
 						//                        System.out.println("(tdc[0]-tdc[1]) = " + (tdc[0]-tdc[1]));
 						//                        System.out.println("(time[0]-time[1]) = " + (time[0]-time[1]));
 						//                        System.out.println("");
 						//                        dataGroups.getItem(sector,layer,component).getH2F("effVLHist").fill( hitPosition, 0.5*(tdc[0]-tdc[1]));
+				
+						// directHitPaddle == 1
 					} else if (paddlePair.COMP==2 && paddlePair.ZPOS!=0.0 && Math.abs((time[1]-time[0]-leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){
 						dataGroups.getItem(sector,layer,component).getH2F("effVRHist").fill( hitPosition, 0.5*(time[1]-time[0]-leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)));
 						//                        dataGroups.getItem(sector,layer,component).getH2F("effVRHist").fill( hitPosition, 0.5*(tdc[1]-tdc[0]));

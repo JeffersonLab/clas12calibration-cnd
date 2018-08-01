@@ -273,10 +273,16 @@ public class DataProvider {
 				double vL=paddlePair.veff(1);
 				double vR=paddlePair.veff(2);
 				double LRad=paddlePair.LRoffsetad();
-				//System.out.println(" veff1 "+vL);System.out.println(" LR "+LRad);
+				double LR=paddlePair.LRoffset();
+				double offset;
+				if(LRad!=0.0){
+					offset=LRad;
+				}
+				else offset=LR;
+				//System.out.println(" offset "+offset+ " LRad "+LRad +" LR "+LR+ " vl " +vL);
 				
 				double delta= paddlePair.paddleLength()*((1./vL)-(1./vR));
-				double deltaR= (paddlePair.TDCL*0.0234) - (paddlePair.TDCR*0.0234-LRad);
+				double deltaR= (paddlePair.TDCL*0.0234) - ((paddlePair.TDCR*0.0234)-offset);
 				
 				if (deltaR<delta) {
 					c=1;

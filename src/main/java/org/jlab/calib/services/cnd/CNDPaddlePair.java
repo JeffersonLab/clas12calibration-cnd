@@ -654,9 +654,9 @@ public class CNDPaddlePair {
         // L1 = 38.999cm
         // L2 & L3 = 38.199cm
         if (desc.getLayer() == 1) {
-            hitPositionAdjustment = 38.196;
-        } else if (desc.getLayer() == 2 || desc.getLayer() == 3) {
             hitPositionAdjustment = 39.596;
+        } else if (desc.getLayer() == 2 || desc.getLayer() == 3) {
+            hitPositionAdjustment = 38.196;
         }
 
         return ZPOS + hitPositionAdjustment;
@@ -671,9 +671,9 @@ public class CNDPaddlePair {
         // L1 = 38.999cm
         // L2 & L3 = 38.199cm
         if (desc.getLayer() == 1) {
-            hitPositionAdjustment = 38.196;
-        } else if (desc.getLayer() == 2 || desc.getLayer() == 3) {
             hitPositionAdjustment = 39.596;
+        } else if (desc.getLayer() == 2 || desc.getLayer() == 3) {
+            hitPositionAdjustment = 38.196;
         }
 
         return ZPOSt + hitPositionAdjustment;

@@ -513,8 +513,8 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 			// ****NEED TO EDIT THIS****
 			// ****
 			maxGraphError = 0.15;
-			graphL.copy(fixGraph(maxGraph(histL, "effVLGraph"),"effVLGraph"));
-			graphR.copy(fixGraph(maxGraph(histR, "effVRGraph"),"effVRGraph"));
+			graphL.copy(maxGraph(histL, "effVLGraph"));
+			graphR.copy(maxGraph(histR, "effVRGraph"));
 
 
 			//            graphL.copy(maxGraph(histL, "graphL"));

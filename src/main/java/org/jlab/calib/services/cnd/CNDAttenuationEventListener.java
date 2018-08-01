@@ -99,7 +99,7 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 	// Log
 	//        public int HIST_Y_BINS = 100;
 	public int HIST_Y_BINS = 40;
-	public double HIST_Y_MIN = -0.5;
+	public double HIST_Y_MIN = 0.15;
 	public double HIST_Y_MAX = 2.5;
 //	public double HIST_Y_MIN = 6;
 //	public double HIST_Y_MAX = 10;
