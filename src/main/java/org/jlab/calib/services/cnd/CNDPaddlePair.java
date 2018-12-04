@@ -199,7 +199,7 @@ public class CNDPaddlePair {
                     if(veff1!=0.0){
                     	veff=veff1;
                     }
-                    //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+                   // System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
         }
         return veff;
     }
@@ -210,7 +210,7 @@ public class CNDPaddlePair {
         if (cnd == "CND") {
             veff = CNDCalibrationEngine.veffValues.getDoubleValue("veff_left",
                     desc.getSector(), desc.getLayer(), desc.getComponent());
-            //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+          // System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
         }
         System.out.println("out vf ");
 
@@ -505,12 +505,15 @@ public class CNDPaddlePair {
         }
         double t_tof = (PATH_LENGTH / (beta * 29.98));
 
+        double verCorr = VERTEX_Z/29.98;
+       // System.out.println("vertex "+VERTEX_Z);
 
+        
         if (EVENT_START_TIME != 0.0 && t_tof!=0.0 && TRACK_ID!=-1 && TIME_STAMP!=-1) {
         	
         	double phase=4.*((TIME_STAMP+1.)%6.);
         	
-            layerOffset = leftRightTimeAverage() -phase - EVENT_START_TIME - t_tof
+            layerOffset = leftRightTimeAverage() -phase - EVENT_START_TIME - t_tof - verCorr
                     - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2);
         }
         return (layerOffset);

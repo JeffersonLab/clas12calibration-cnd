@@ -423,6 +423,7 @@ public class DataProvider {
 						double pt = trkBank.getFloat("pt", trkId);
 						double beta = mom / Math.sqrt(mom * mom + 0.139 * 0.139);
 						//double beta = mom / Math.sqrt(mom * mom + 0.938 * 0.938);
+						//System.out.println("beta pion "+ betap+" beta proton "+beta);
 						paddlePair.BETA = beta;
 						paddlePair.P = mom;
 						paddlePair.P_t = pt;
@@ -960,6 +961,7 @@ public class DataProvider {
 						double pz = tbtBank.getFloat("p0_z", trkId - 1);
 						double mom = Math.sqrt(px * px + py * py + pz * pz);
 						double beta = mom / Math.sqrt(mom * mom + 0.139 * 0.139);
+						//double beta = mom / Math.sqrt(mom * mom + 0.938 * 0.938);
 						paddle.BETA = beta;
 						paddle.P = mom;
 						paddle.TRACK_ID = trkId;

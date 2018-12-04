@@ -85,8 +85,8 @@ public class CNDEnergy extends CNDCalibrationEngine{
 	int fitMethod = 0;
 	public String fitMode = "RQ";
 	boolean showSlices = false;
-	private int FIT_METHOD_SF = 0;
-	private int FIT_METHOD_MAX = 1;
+	private int FIT_METHOD_SF = 1;
+	private int FIT_METHOD_MAX = 0;
 	public int fitMinEvents = 20;
 	//public final double MAX_CHI = 10;
 	
@@ -94,18 +94,18 @@ public class CNDEnergy extends CNDCalibrationEngine{
 	
 
 
-	public int HIST_X_BINS = 40;
+	public int HIST_X_BINS = 100;
 	public double HIST_X_MIN = 0;
 	public double HIST_X_MAX = 80;
 	
 	
 	
-	public int HIST_Y_BINS = 40;
+	public int HIST_Y_BINS = 100;
 	public double HIST_Y_MIN = 0.15;
 	public double HIST_Y_MAX = 2.3;
 
 	//logmean parameters
-	public int HIST_M_BIN = 70;
+	public int HIST_M_BIN = 100;
 	public double HIST_M_MIN = 500;
 	public double StartFitGeoMean = 1000;
 	public double HIST_M_MAX = 3000;
@@ -308,6 +308,9 @@ public class CNDEnergy extends CNDCalibrationEngine{
 				F1D funcLdir = new F1D("funcLdir", "[a]+[b]*x", HIST_X_MIN, HIST_X_MAX);
 				F1D funcRdir = new F1D("funcRdir", "[a]+[b]*x", HIST_X_MIN, HIST_X_MAX);
 				
+				funcLdir.setLineColor(FUNC_COLOUR);
+				funcRdir.setLineColor(FUNC_COLOUR);
+				
 				F1D meanL = new F1D("meanL", "[amp]*landau(x,[mean],[sigma])+[cst]", HIST_M_MIN, HIST_M_MAX);
 				F1D meanR = new F1D("meanR", "[amp]*landau(x,[mean],[sigma])+[cst]", HIST_M_MIN, HIST_M_MAX);
 				
@@ -419,7 +422,7 @@ public class CNDEnergy extends CNDCalibrationEngine{
 				// Normalise the ADC values as if they were verticle tracks traversing only 3.0cm of paddle thickness
 				double normalisingADCFactor = 0.0;
 				normalisingADCFactor = 3.0 / pathInPaddle;
-				
+				if(Math.abs((time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){
 				if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0){ 
 					dataGroups.getItem(sector, layer, component).getH2F("logratioL").fill(hitPosition, Math.log( (float)paddlePair.ADCL/paddlePair.ADCR));
 					
@@ -433,6 +436,8 @@ public class CNDEnergy extends CNDCalibrationEngine{
 					if(paddlePair.CHARGE==-1){
 					dataGroups.getItem(sector, layer, component).getH1F("logmeanR").fill(Math.sqrt( (float) paddlePair.ADCR*paddlePair.ADCL*normalisingADCFactor*normalisingADCFactor));
 					}
+				}
+				
 				}
 			}
 		}
@@ -627,6 +632,10 @@ public class CNDEnergy extends CNDCalibrationEngine{
 					}
 				}
 		
+
+				if(lowLimit<20.)lowLimit=20.;
+				if(highLimit>60.)highLimit=60.+2.5*(layer-1);
+				
 				F1D funcLdir = dataGroups.getItem(sector, layer, component).getF1D("funcLdir");
 				funcLdir.setRange(lowLimit, highLimit);
 		
@@ -689,6 +698,9 @@ public class CNDEnergy extends CNDCalibrationEngine{
 					}
 				}
 		
+				if(lowLimit<20.)lowLimit=20.;
+				if(highLimit>60.)highLimit=60.+2.5*(layer-1);
+
 				F1D funcRdir = dataGroups.getItem(sector, layer, component).getF1D("funcRdir");
 				funcRdir.setRange(lowLimit, highLimit);
 		

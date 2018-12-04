@@ -1295,8 +1295,8 @@ ChangeListener {
 		LRPanel.add(new JLabel("LR offset Options:"),c);
 		c.gridx = 1;
 		c.gridy = 0;
-		LRList.addItem("no field");   
 		LRList.addItem("magnetic field on"); 
+		LRList.addItem("no field");   
 		LRList.addActionListener(this);
 		LRPanel.add(LRList,c);
 		// time limit 
@@ -1341,9 +1341,9 @@ ChangeListener {
 		c.gridy = 0;
 		effVPanel.add(new JLabel("Effective velocity graph:"),c);
 		c.gridx = 1;
-		c.gridy = 0;        
-		effVFitList.addItem("Gaussian mean of slices");
+		c.gridy = 0; 
 		effVFitList.addItem("Max position of slices");
+		effVFitList.addItem("Gaussian mean of slices");
 		effVFitList.addActionListener(this);
 		effVPanel.add(effVFitList,c);
 		// fit mode
@@ -1417,9 +1417,9 @@ ChangeListener {
 		c.gridy = 0;
 		utPanel.add(new JLabel("Uturn time loss graph:"),c);
 		c.gridx = 1;
-		c.gridy = 0;        
-		utFitList.addItem("Gaussian mean of slices");
+		c.gridy = 0;    
 		utFitList.addItem("Max position of slices");
+		utFitList.addItem("Gaussian mean of slices");
 		utFitList.addActionListener(this);
 		utPanel.add(utFitList,c);
 		// fit mode
@@ -1492,8 +1492,8 @@ ChangeListener {
 		attPanel.add(new JLabel("Attenuation length graph:"),c);
 		c.gridx = 1;
 		c.gridy = 0;        
-		attFitList.addItem("Gaussian mean of slices");
 		attFitList.addItem("Max position of slices");
+		attFitList.addItem("Gaussian mean of slices");
 		attFitList.addActionListener(this);
 		attPanel.add(attFitList,c);
 		// fit mode
@@ -1603,8 +1603,8 @@ ChangeListener {
 		energyPanel.add(new JLabel("Log ratio graph:"),c);
 		c.gridx = 1;
 		c.gridy = 0;
-		EFitList.addItem("Gaussian mean of slices");
 		EFitList.addItem("Max position of slices");
+		EFitList.addItem("Gaussian mean of slices");
 		EFitList.addActionListener(this);
 		energyPanel.add(EFitList,c);
 		// min events

@@ -50,7 +50,7 @@ public class CNDCalibrationEngine extends CalibrationEngine {
 	// plot settings
 	public final static int		FUNC_COLOUR = 2;
 	public final static int		MARKER_SIZE = 3;
-	public final static int		FUNC_LINE_WIDTH = 2;
+	public final static int		FUNC_LINE_WIDTH = 3;
 	public final static int		MARKER_LINE_WIDTH = 1;
 
 	// Run constants
@@ -189,6 +189,7 @@ public class CNDCalibrationEngine extends CalibrationEngine {
 			for (int layer = 1; layer <= 3; layer++) {
 				int component = 1;
                                     fit(sector, layer, component);
+                                    System.out.println("end fit");
 			}
 		}
                 System.out.println("from CNDCalibrationEngine.analyze()...");

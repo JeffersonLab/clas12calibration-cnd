@@ -77,8 +77,8 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 	int fitMethod = 0;
 	public String fitMode = "RQ";
 	boolean showSlices = false;
-	private int FIT_METHOD_SF = 0;
-	private int FIT_METHOD_MAX = 1;
+	private int FIT_METHOD_SF = 1;
+	private int FIT_METHOD_MAX = 0;
 	public int fitMinEvents = 20;
 	public final double MAX_CHI = 20;
 
@@ -90,7 +90,7 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 	//        public int HIST_BINS = 640;
 	//        public double HIST_X_MIN = 0;
 	//        public double HIST_X_MAX = 640;
-	public int HIST_X_BINS = 40;
+	public int HIST_X_BINS = 100;
 	public double HIST_X_MIN = -5;
 	public double HIST_X_MAX = 80;
 	//        public int HIST_Y_BINS = 150;
@@ -98,11 +98,11 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 	//        public double HIST_Y_MAX = 3000;
 	// Log
 	//        public int HIST_Y_BINS = 100;
-	public int HIST_Y_BINS = 40;
+	public int HIST_Y_BINS = 100;
 	public double HIST_Y_MIN = 0.15;
 	public double HIST_Y_MAX = 2.5;
-//	public double HIST_Y_MIN = 6;
-//	public double HIST_Y_MAX = 10;
+	//	public double HIST_Y_MIN = 6;
+	//	public double HIST_Y_MAX = 10;
 
 	//        public int HIST_Y_BINS = 300;
 	//        public double HIST_Y_MIN = 2.4;
@@ -128,14 +128,14 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 		calib.setPrecision(5);
 
 		// assign constraints to all paddles
-//		        calib.addConstraint(3, EXPECTED_ATTLEN - ALLOWED_DIFF,
-//		                EXPECTED_ATTLEN + ALLOWED_DIFF);
-//		        calib.addConstraint(4, (-1) * ALLOWED_DIFF,
-//		                (1) * ALLOWED_DIFF);
-//		        calib.addConstraint(5, EXPECTED_ATTLEN - ALLOWED_DIFF,
-//		                EXPECTED_ATTLEN + ALLOWED_DIFF);
-//		        calib.addConstraint(6, (-1) * ALLOWED_DIFF,
-//		                (1) * ALLOWED_DIFF);
+		//		        calib.addConstraint(3, EXPECTED_ATTLEN - ALLOWED_DIFF,
+		//		                EXPECTED_ATTLEN + ALLOWED_DIFF);
+		//		        calib.addConstraint(4, (-1) * ALLOWED_DIFF,
+		//		                (1) * ALLOWED_DIFF);
+		//		        calib.addConstraint(5, EXPECTED_ATTLEN - ALLOWED_DIFF,
+		//		                EXPECTED_ATTLEN + ALLOWED_DIFF);
+		//		        calib.addConstraint(6, (-1) * ALLOWED_DIFF,
+		//		                (1) * ALLOWED_DIFF);
 
 	}
 
@@ -248,7 +248,7 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 		if(CNDCalibration.binXaxisatt!=0){
 			HIST_X_BINS=CNDCalibration.binXaxisatt;
 		}
-		
+
 		// GM perform init processing
 		for (int sector = 1; sector <= 24; sector++) {
 			for (int layer = 1; layer <= 3; layer++) {
@@ -272,6 +272,9 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 				F1D funcL = new F1D("funcL", "[a]+[b]*x", HIST_X_MIN, HIST_X_MAX);
 				F1D funcR = new F1D("funcR", "[a]+[b]*x", HIST_X_MIN, HIST_X_MAX);
 
+				funcL.setLineColor(FUNC_COLOUR);
+				funcR.setLineColor(FUNC_COLOUR);
+				
 				GraphErrors graphL = new GraphErrors("adcL_vs_z_graph");
 				graphL.setName("adcL_vs_z_graph");
 				graphL.setMarkerSize(MARKER_SIZE);
@@ -394,20 +397,20 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 					//                    } else if (directHitPaddle == 1 && paddlePair.ZPOS!=0.0) {
 					//                        dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log(normalisingADCFactor * paddlePair.ADCR));
 					//                    }
+					if(Math.abs((time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){
+						if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0) {
+							dataGroups.getItem(sector, layer, component).getH2F("adcL_vs_z").fill(hitPosition, Math.log((float)paddlePair.ADCL/paddlePair.ADCR));
+							//dataGroups.getItem(sector, layer, component).getH2F("adcL_vs_z").fill(hitPosition, Math.log(paddlePair.ADCR));
 
-					if (paddlePair.COMP==1 && paddlePair.ZPOS!=0.0) {
-						dataGroups.getItem(sector, layer, component).getH2F("adcL_vs_z").fill(hitPosition, Math.log((float)paddlePair.ADCL/paddlePair.ADCR));
-						//dataGroups.getItem(sector, layer, component).getH2F("adcL_vs_z").fill(hitPosition, Math.log(paddlePair.ADCR));
+							//                      System.out.println();
+							//    System.out.println("ADCL = " + (float)paddlePair.ADCL+" ADCR = " + (float)paddlePair.ADCR);
+							//                      System.out.println("logratio = " +  Math.log((float)paddlePair.ADCL/(float)paddlePair.ADCR));
+						} else if (paddlePair.COMP==2 && paddlePair.ZPOS!=0.0) {
+							dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log((float)paddlePair.ADCR/paddlePair.ADCL));
+							//dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log(paddlePair.ADCL));
 
-						//                      System.out.println();
-						                     //    System.out.println("ADCL = " + (float)paddlePair.ADCL+" ADCR = " + (float)paddlePair.ADCR);
-						//                      System.out.println("logratio = " +  Math.log((float)paddlePair.ADCL/(float)paddlePair.ADCR));
-					} else if (paddlePair.COMP==2 && paddlePair.ZPOS!=0.0) {
-						dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log((float)paddlePair.ADCR/paddlePair.ADCL));
-						//dataGroups.getItem(sector, layer, component).getH2F("adcR_vs_z").fill(hitPosition, Math.log(paddlePair.ADCL));
-
+						}
 					}
-
 				}
 			}
 		}
@@ -448,7 +451,7 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 
 		int fitMinEventsL = 2*histL.getEntries()/HIST_X_BINS;
 		int fitMinEventsR = 2*histR.getEntries()/HIST_X_BINS;
-		
+
 		if(CNDCalibration.mineventatt!=0){
 			fitMinEventsL = CNDCalibration.mineventatt;
 			fitMinEventsR = CNDCalibration.mineventatt;
@@ -559,6 +562,10 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 			}
 		}
 
+
+		if(lowLimit<20.)lowLimit=20.;
+		if(highLimit>60.)highLimit=60.+2.5*(layer-1);
+		
 		F1D funcL = dataGroups.getItem(sector, layer, component).getF1D("funcL");
 		funcL.setRange(lowLimit, highLimit);
 		//        if (sector==1 && layer ==1){
@@ -576,7 +583,7 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 			System.out.println("Fit error with sector " + sector + " layer " + layer + " component " + component);
 			e.printStackTrace();
 		}
-		
+
 		// ****
 		// ****RIGHT GRAPH
 		// ****
@@ -601,30 +608,30 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 			}
 		}
 
-//		if (maxRange != UNDEFINED_OVERRIDE) {
-//			// use custom values for fit
-//			highLimit = maxRange;
-//		} else {
-//			// Fit over filled data only:
-//			if (graphR.getDataSize(0) >= 2) {
-//				for (int i = (graphR.getDataSize(0) - 1); i > lowLimitBin; i--) {
-//					if (graphR.getDataX(i) > 0.0) {
-//						if(graphL.getDataX(i)<paddlelength){
-//							highLimit = graphR.getDataX(i);
-//							break;
-//						}
-//						else if(graphL.getDataX(i)>paddlelength)
-//						{
-//							highLimit = paddlelength;
-//							break;
-//						}
-//					}
-//				}
-//			} else {
-//				highLimit = FIT_MAX;
-//			}
-//		}
-		
+		//		if (maxRange != UNDEFINED_OVERRIDE) {
+		//			// use custom values for fit
+		//			highLimit = maxRange;
+		//		} else {
+		//			// Fit over filled data only:
+		//			if (graphR.getDataSize(0) >= 2) {
+		//				for (int i = (graphR.getDataSize(0) - 1); i > lowLimitBin; i--) {
+		//					if (graphR.getDataX(i) > 0.0) {
+		//						if(graphL.getDataX(i)<paddlelength){
+		//							highLimit = graphR.getDataX(i);
+		//							break;
+		//						}
+		//						else if(graphL.getDataX(i)>paddlelength)
+		//						{
+		//							highLimit = paddlelength;
+		//							break;
+		//						}
+		//					}
+		//				}
+		//			} else {
+		//				highLimit = FIT_MAX;
+		//			}
+		//		}
+
 		if (maxRange != UNDEFINED_OVERRIDE) {
 			// use custom values for fit
 			highLimit = maxRange;
@@ -649,6 +656,10 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 			}
 		}
 
+
+		if(lowLimit<20.)lowLimit=20.;
+		if(highLimit>60.)highLimit=60.+2.5*(layer-1);
+		
 		F1D funcR = dataGroups.getItem(sector, layer, component).getF1D("funcR");
 
 		funcR.setRange(lowLimit, highLimit);
