@@ -179,7 +179,7 @@ public class CNDPaddlePair {
 	    double triggerphase=0;
 	    if(cycles > 0) triggerphase=period*((TIME_STAMP+phase)%cycles);
 	    //System.out.println(RUN);
-	    System.out.println(period + " " + phase + " " + cycles + " " + TIME_STAMP + " " + triggerphase);
+	    //System.out.println(period + " " + phase + " " + cycles + " " + TIME_STAMP + " " + triggerphase);
 		return triggerphase;
 		
     }
