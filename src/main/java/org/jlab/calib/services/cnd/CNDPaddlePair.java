@@ -1,8 +1,11 @@
-package org.jlab.calib.services.cnd;
+package src.main.java.org.jlab.calib.services.cnd;
 
-import org.jlab.calib.services.cnd.CNDCalibration;
-import org.jlab.calib.services.cnd.CNDCalibrationEngine;
+import src.main.java.org.jlab.calib.services.cnd.CNDCalibration;
+import src.main.java.org.jlab.calib.services.cnd.CNDCalibrationEngine;
 import org.jlab.detector.base.DetectorDescriptor;
+import org.jlab.detector.calib.utils.CalibrationConstants;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.io.base.DataBank;
 
 /**
 * CND Calibration suite
@@ -16,11 +19,16 @@ public class CNDPaddlePair {
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
     public static String cnd = "CND";
+    
+    public static int currentRun=0;
 
+    public static CalibrationConstants jitConsts; 
+    
     private DetectorDescriptor desc = new DetectorDescriptor();
 
     public int COMP = 0;
     
+    public int RUN = 0;
     public int ADCL = 0;
     public int ADCR = 0;
     public int TDCL = 0;
@@ -152,6 +160,30 @@ public class CNDPaddlePair {
     	return this.COMP;
     }
     
+    
+    public double getCNDJitter() {
+		
+		// Get the TDC jitter parameters when runNo changes
+	
+  
+		if(RUN!=currentRun){	
+		DatabaseConstantProvider dcp = new DatabaseConstantProvider(RUN, "default");
+		jitConsts = dcp.readConstants("/calibration/ctof/time_jitter");
+		dcp.disconnect();
+		currentRun=RUN;
+		
+		}
+	    double period = jitConsts.getDoubleValue("period", 0,0,0);
+	    int    phase  = jitConsts.getIntValue("phase", 0,0,0);
+	    int cycles = jitConsts.getIntValue("cycles", 0,0,0);
+	    double triggerphase=0;
+	    if(cycles > 0) triggerphase=period*((TIME_STAMP+phase)%cycles);
+	    //System.out.println(RUN);
+	    System.out.println(period + " " + phase + " " + cycles + " " + TIME_STAMP + " " + triggerphase);
+		return triggerphase;
+		
+    }
+    
     public double uturnTloss() {
 
         double uturnTloss = 0.0;
@@ -199,7 +231,7 @@ public class CNDPaddlePair {
                     if(veff1!=0.0){
                     	veff=veff1;
                     }
-                   // System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+                    //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
         }
         return veff;
     }
@@ -210,7 +242,7 @@ public class CNDPaddlePair {
         if (cnd == "CND") {
             veff = CNDCalibrationEngine.veffValues.getDoubleValue("veff_left",
                     desc.getSector(), desc.getLayer(), desc.getComponent());
-          // System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+            //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
         }
         System.out.println("out vf ");
 
@@ -505,15 +537,12 @@ public class CNDPaddlePair {
         }
         double t_tof = (PATH_LENGTH / (beta * 29.98));
 
-        double verCorr = VERTEX_Z/29.98;
-       // System.out.println("vertex "+VERTEX_Z);
 
-        
         if (EVENT_START_TIME != 0.0 && t_tof!=0.0 && TRACK_ID!=-1 && TIME_STAMP!=-1) {
         	
         	double phase=4.*((TIME_STAMP+1.)%6.);
         	
-            layerOffset = leftRightTimeAverage() -phase - EVENT_START_TIME - t_tof - verCorr
+            layerOffset = leftRightTimeAverage() -getCNDJitter() - EVENT_START_TIME - t_tof
                     - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2);
         }
         return (layerOffset);
