@@ -1,7 +1,7 @@
-package src.main.java.org.jlab.calib.services.cnd;
+package org.jlab.calib.services.cnd;
 
-import src.main.java.org.jlab.calib.services.cnd.CNDCalibration;
-import src.main.java.org.jlab.calib.services.cnd.CNDCalibrationEngine;
+import org.jlab.calib.services.cnd.CNDCalibration;
+import org.jlab.calib.services.cnd.CNDCalibrationEngine;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.calib.utils.CalibrationConstants;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
