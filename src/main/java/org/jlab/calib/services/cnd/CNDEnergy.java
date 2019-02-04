@@ -975,9 +975,11 @@ public class CNDEnergy extends CNDCalibrationEngine{
 		func.setParameter(0, 1.7*maxCounts);  //1.7 being the inverse of the amplitude of a amplitude 1 Landau fct at x=mean
 		//meanL.setParLimits(0, maxCounts, maxCounts*2);
 		func.setParameter(1, maxPos);
+		func.setParLimits(1, maxPos*0.9, maxPos*1.1);
 		func.setParameter(2, 100.);
 		
 		System.out.println("range " + minRange + " " + maxRange );
+		System.out.println("max pos " + maxPos );
 		func.setRange(minRange, maxRange);
 
 		System.out.println("parameters " + func.getParameter(0) +" "+ func.getParameter(1)+" "+ func.getParameter(2));
