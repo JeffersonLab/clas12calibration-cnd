@@ -152,7 +152,10 @@ ChangeListener {
 	// configuration settings
 	JCheckBox[] stepChecks = {new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),
 			new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox()};    
-
+	private JTextField targetCCDB = new JTextField(5);
+	public static String targetVariation = "default";
+	
+	//Tracking/General
 	JComboBox<String> CVTmatch = new JComboBox<String>();
 	public static int CVTmatchI = 0;
 	public final static int CVTNO = 0;
@@ -489,6 +492,11 @@ ChangeListener {
 			}
 
 			// set the config values tracking
+			
+			if (targetCCDB.getText().compareTo("default") != 0) {
+				targetVariation = targetCCDB.getText();
+			}
+			
 			if (rcsText.getText().compareTo("") != 0) {
 				maxRcs = Double.parseDouble(rcsText.getText());
 			}
@@ -1088,9 +1096,25 @@ ChangeListener {
 				stepPanel.add(stepChecks[i],c);
 			
 		}
+		c.gridx = 0; c.gridy = 20;
+		stepPanel.add(new JLabel("Target CCDB"),c);
+		targetCCDB.addActionListener(this);
+		Border borderCCDB = BorderFactory.createLineBorder(Color.BLUE, 2);
+		targetCCDB.setBorder(border);
+		targetCCDB.setText("default");
+		c.gridx = 1; c.gridy = 20;
+		stepPanel.add(targetCCDB,c);
+		/*c.gridx = 0;
+		c.gridy = 1;
+		trPanel.add(new JLabel("Maximum reduced chi squared for track:"),c);
+		rcsText.addActionListener(this);
+		rcsText.setText("75");*/
+		
 		JPanel butPage1 = new configButtonPanel(this, true, "Next");
 		stepOuterPanel.add(butPage1, BorderLayout.SOUTH);
 
+		
+		
 		configPane.add("Select steps", stepOuterPanel);    
 
 		// Previous calibration values
@@ -1121,6 +1145,7 @@ ChangeListener {
 			confPanel.add(engPanels[i-2]);
 		}
 
+		
 		//    Previously:
 		//        for (int i=3; i< engines.length; i++) {
 		//            engPanels[i-3] = new CNDPrevConfigPanel(engines[i]);
@@ -1477,7 +1502,7 @@ ChangeListener {
 
 		JPanel butPage7 = new configButtonPanel(this, true, "Next");
 		utOuterPanel.add(butPage7, BorderLayout.SOUTH);
-		configPane.add("Uturn Time Loss and LR adjusted", utOuterPanel); 
+		configPane.add("UturnTimeLoss and LR adjusted", utOuterPanel); 
 
 		// att options
 		JPanel attOuterPanel = new JPanel(new BorderLayout());
