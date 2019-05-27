@@ -21,8 +21,10 @@ public class CNDPaddlePair {
     public static String cnd = "CND";
     
     public static int currentRun=0;
+    public static int currentRunTarget=0;
 
     public static CalibrationConstants jitConsts; 
+    public static CalibrationConstants target;
     
     private DetectorDescriptor desc = new DetectorDescriptor();
 
@@ -168,7 +170,7 @@ public class CNDPaddlePair {
   
 		if(RUN!=currentRun){	
 		DatabaseConstantProvider dcp = new DatabaseConstantProvider(RUN, "default");
-		jitConsts = dcp.readConstants("/calibration/ctof/time_jitter");
+		jitConsts = dcp.readConstants("/calibration/cnd/time_jitter");
 		dcp.disconnect();
 		currentRun=RUN;
 		
@@ -682,7 +684,17 @@ public class CNDPaddlePair {
 
         double hitPositionAdjustment = 0.0;
 
-        // Hard coded values of upstream endface relative to the solenoid centre (assuming target position is vz = 0 )
+        
+        if(RUN!=currentRunTarget){	
+    		DatabaseConstantProvider dcp = new DatabaseConstantProvider(RUN, CNDCalibration.targetVariation);
+    		target = dcp.readConstants("/geometry/target");
+    		dcp.disconnect();
+    		currentRunTarget=RUN;
+    		
+    		}
+    	double targetZ = target.getDoubleValue("position", 0,0,0);
+    	//System.out.println(" here in targetCCDB "+CNDCalibration.targetVariation+" "+targetZ);
+       
         // L1 = 38.999cm
         // L2 & L3 = 38.199cm
         if (desc.getLayer() == 1) {
@@ -691,8 +703,11 @@ public class CNDPaddlePair {
             hitPositionAdjustment = 38.196;
         }
 
-        return ZPOS + hitPositionAdjustment;
-
+        
+       // System.out.println(targetZ);
+        //System.out.println(" here in targetCCDB "+CNDCalibration.targetVariation+" "+targetZ+" "+(ZPOS + hitPositionAdjustment - targetZ)+" "+" "+(ZPOS + hitPositionAdjustment));
+        return ZPOS + hitPositionAdjustment - targetZ; //To be added when this become official
+        
     }
     
     public double zPostCND() {
