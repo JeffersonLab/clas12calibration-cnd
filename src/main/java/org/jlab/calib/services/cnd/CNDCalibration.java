@@ -154,6 +154,10 @@ ChangeListener {
 			new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox()};    
 	private JTextField targetCCDB = new JTextField(5);
 	public static String targetVariation = "default";
+	JComboBox<String> hipoVersion = new JComboBox<String>();
+	public static int hipoV=0;
+	public final static int hipo4 = 0;
+	public final static int hipo3 = 1;
 	
 	//Tracking/General
 	JComboBox<String> CVTmatch = new JComboBox<String>();
@@ -492,7 +496,8 @@ ChangeListener {
 			}
 
 			// set the config values tracking
-			
+			hipoV = hipoVersion.getSelectedIndex();
+			System.out.println("HIPO V "+hipoV);
 			if (targetCCDB.getText().compareTo("default") != 0) {
 				targetVariation = targetCCDB.getText();
 			}
@@ -1104,6 +1109,17 @@ ChangeListener {
 		targetCCDB.setText("default");
 		c.gridx = 1; c.gridy = 20;
 		stepPanel.add(targetCCDB,c);
+		// hipo version
+				c.gridx = 0;
+				c.gridy = 21;
+				stepPanel.add(new JLabel("Hipo version:"),c);
+				hipoVersion.addItem("hipo 4");
+				hipoVersion.addItem("hipo 3");
+				hipoVersion.addActionListener(this);
+				c.gridx = 1;
+				c.gridy = 21;
+				stepPanel.add(hipoVersion,c);
+
 		/*c.gridx = 0;
 		c.gridy = 1;
 		trPanel.add(new JLabel("Maximum reduced chi squared for track:"),c);
