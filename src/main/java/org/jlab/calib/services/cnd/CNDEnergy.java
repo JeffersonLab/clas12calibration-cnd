@@ -102,7 +102,7 @@ public class CNDEnergy extends CNDCalibrationEngine{
 	
 	public int HIST_Y_BINS = 100;
 	public double HIST_Y_MIN = 0.15;
-	public double HIST_Y_MAX = 2.3;
+	public double HIST_Y_MAX = 2.5;
 
 	//logmean parameters
 	public int HIST_M_BIN = 100;
