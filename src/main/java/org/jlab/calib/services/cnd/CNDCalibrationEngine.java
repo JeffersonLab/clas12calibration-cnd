@@ -77,7 +77,7 @@ public class CNDCalibrationEngine extends CalibrationEngine {
 	
 	public int fitMethod = 0; //  0=SLICES 1=MAX 2=PROFILE	
 	public String fitMode = "L";
-	public int fitMinEvents = 0;
+	public int fitMinEvents = 20;
 	public double maxGraphError = 0.1;
 	public double fitSliceMaxError = 0.3;
 	public static int FULL_COUNTER = 0;
