@@ -91,7 +91,7 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 	//        public double HIST_X_MIN = 0;
 	//        public double HIST_X_MAX = 640;
 	public int HIST_X_BINS = 100;
-	public double HIST_X_MIN = -5;
+	public double HIST_X_MIN = 0;
 	public double HIST_X_MAX = 80;
 	//        public int HIST_Y_BINS = 150;
 	//        public double HIST_Y_MIN = 0;
@@ -449,8 +449,8 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 		GraphErrors graphR = (GraphErrors) dataGroups.getItem(sector, layer, component).getData("adcR_vs_z_graph");
 
 
-		int fitMinEventsL = 2*histL.getEntries()/HIST_X_BINS;
-		int fitMinEventsR = 2*histR.getEntries()/HIST_X_BINS;
+		int fitMinEventsL = histL.getEntries()/HIST_X_BINS;
+		int fitMinEventsR = histR.getEntries()/HIST_X_BINS;
 
 		if(CNDCalibration.mineventatt!=0){
 			fitMinEventsL = CNDCalibration.mineventatt;
@@ -503,7 +503,7 @@ public class CNDAttenuationEventListener extends CNDCalibrationEngine {
 			// ****
 			// ****NEED TO EDIT THIS****
 			// ****
-			maxGraphError = 0.10;
+			maxGraphError = 0.15;
 			graphL.copy(maxGraph(histL, "adcL_vs_z_graph"));
 			graphR.copy(maxGraph(histR, "adcR_vs_z_graph"));
 
