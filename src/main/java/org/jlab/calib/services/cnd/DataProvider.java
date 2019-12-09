@@ -260,6 +260,8 @@ public class DataProvider {
 
 				paddlePair.iTDCL=tdcIdx1;
 				paddlePair.iTDCR=tdcIdx2;
+				
+				paddlePair.TIMEH=hitsBank.getFloat("time", hitIndex);
 
 				paddlePair.setAdcTdc(
 						adcBank.getInt("ADC", adcIdx1),
@@ -314,7 +316,9 @@ public class DataProvider {
 				paddlePair.ADC_TIMER = adcBank.getFloat("time", adcIdx2);
 
 				paddlePair.TOF_TIME = hitsBank.getFloat("time", hitIndex);
-				paddlePair.PATH_LENGTH = hitsBank.getFloat("pathlength", hitIndex);
+				
+				// this is the way the pathlength should be retrived, in case it is wrongly calculated the line in the CVT section recalculate it
+				//paddlePair.PATH_LENGTH = hitsBank.getFloat("pathlength", hitIndex);
 
 				if (isCookedOrGEMC == true) {
 					paddlePair.T_LENGTH = hitsBank.getFloat("tLength", hitIndex);
@@ -326,11 +330,24 @@ public class DataProvider {
 				if (event.hasBank("REC::Event")) {
 					DataBank eventRecBank = event.getBank("REC::Event");
 
+					double vertexTrigger=0.0;
+					
+					if (event.hasBank("REC::Particle")) {
+							DataBank particle = event.getBank("REC::Particle");
+							
+							vertexTrigger=particle.getFloat("vz", 0);
+						
+					}
 
+					paddlePair.VERTEX_TRIGGER=vertexTrigger;
+					
+					
+					
 					// System.out.println("STTime = " + eventRecBank.getFloat("STTime", 0));
 					if(CNDCalibration.hipoV==CNDCalibration.hipo4) {
 						if (eventRecBank.getFloat("startTime", 0) != -1000.0) {
 							paddlePair.EVENT_START_TIME = eventRecBank.getFloat("startTime", 0);
+							//System.out.println("Stt "+eventRecBank.getFloat("startTime", 0));
 						}
 					}
 
@@ -438,6 +455,31 @@ public class DataProvider {
 						paddlePair.VERTEX_Z = trkBank.getFloat("z0", trkId);
 						paddlePair.CHARGE = trkBank.getInt("q", trkId);
 						paddlePair.TRACK_REDCHI2 = trkBank.getFloat("chi2", trkId);
+						
+						double layerh=paddlePair.getDescriptor().getLayer();
+						double qh=paddlePair.CHARGE;
+						double solenoid=event.getBank("RUN::config").getFloat("solenoid", 0);
+						double d0=trkBank.getFloat("d0", trkId)*10.;
+						double tandip=trkBank.getFloat("tandip",trkId);
+						
+						double pathlength=0.0;
+						
+						double rho = (0.000299792458 * qh * 5. * solenoid) / pt;
+						
+						double r= 290 + (layerh - 0.5) * 30. + (layerh - 1) * 1.;//250;//
+						
+						double par = 1. - ((r * r - d0 * d0) * rho * rho) / (2. * (1. + d0 * Math.abs(rho)));
+			       		
+						double newPathLength = Math.abs(Math.acos(par) / rho);
+			        	
+						double zh = paddlePair.VERTEX_Z*10. + newPathLength * tandip;
+						pathlength=Math.sqrt((zh-paddlePair.VERTEX_Z*10.)*(zh-paddlePair.VERTEX_Z*10.)+(newPathLength*newPathLength));
+						
+						paddlePair.PATH_LENGTH = pathlength/10.;
+						
+						double t_tof = (paddlePair.PATH_LENGTH / (beta * 29.98));
+						//if(qh==-1)System.out.println(pathlength);
+						//System.out.println("SLC" + paddlePair.getDescriptor().getSector()+" "+paddlePair.getDescriptor().getLayer()+" "+paddlePair.getDescriptor().getComponent()+" paddle vt " + (paddlePair.TIMEH-paddlePair.EVENT_START_TIME-t_tof) + "  "+ (paddlePair.layerOffset()));
 
 					}
 
