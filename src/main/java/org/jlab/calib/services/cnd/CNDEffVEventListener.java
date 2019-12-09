@@ -79,8 +79,8 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 	int fitMethod = 0;
 	public String fitMode = "RQ";
 	boolean showSlices = false;
-	private int FIT_METHOD_SF = 0;
-	private int FIT_METHOD_MAX = 1;
+	private int FIT_METHOD_SF = 1;
+	private int FIT_METHOD_MAX = 0;
 	public int fitMinEvents = 20;
 	public final double MAX_CHI = 10;
 
@@ -102,7 +102,7 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 	//        public double HIST_Y_MAX = 3000;
 	//        public int HIST_Y_BINS = 100;
 	// Time
-	public int HIST_Y_BINS = 70;
+	public int HIST_Y_BINS = 100;
 	public double HIST_Y_MIN = -6;
 	public double HIST_Y_MAX = -0.5;
 
@@ -308,6 +308,9 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 				F1D funcL = new F1D("funcL", "[a]+[b]*x", HIST_X_MIN, HIST_X_MAX);
 				F1D funcR = new F1D("funcR", "[a]+[b]*x", HIST_X_MIN, HIST_X_MAX);
 
+				funcL.setLineColor(FUNC_COLOUR);
+				funcR.setLineColor(FUNC_COLOUR);
+				
 				GraphErrors graphL = new GraphErrors("effVLGraphh");
 				graphL.setName("effVLGraph");
 				graphL.setMarkerSize(MARKER_SIZE);
@@ -604,6 +607,10 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 			}
 		}        
 
+
+		if(lowLimit<20.)lowLimit=20.;
+		if(highLimit>60.)highLimit=60.+2.5*(layer-1);
+		
 		F1D funcL = dataGroups.getItem(sector,layer,component).getF1D("funcL");
 		funcL.setRange(lowLimit, highLimit);
 
@@ -667,6 +674,10 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 			}
 		}        
 
+
+		if(lowLimit<20.)lowLimit=20.;
+		if(highLimit>60.)highLimit=60.+2.5*(layer-1);
+		
 		F1D funcR = dataGroups.getItem(sector,layer,component).getF1D("funcR");
 		funcR.setRange(lowLimit, highLimit);
 

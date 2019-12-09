@@ -152,7 +152,14 @@ ChangeListener {
 	// configuration settings
 	JCheckBox[] stepChecks = {new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),
 			new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox(),new JCheckBox()};    
-
+	private JTextField targetCCDB = new JTextField(5);
+	public static String targetVariation = "default";
+	JComboBox<String> hipoVersion = new JComboBox<String>();
+	public static int hipoV=0;
+	public final static int hipo4 = 0;
+	public final static int hipo3 = 1;
+	
+	//Tracking/General
 	JComboBox<String> CVTmatch = new JComboBox<String>();
 	public static int CVTmatchI = 0;
 	public final static int CVTNO = 0;
@@ -489,6 +496,12 @@ ChangeListener {
 			}
 
 			// set the config values tracking
+			hipoV = hipoVersion.getSelectedIndex();
+			System.out.println("HIPO V "+hipoV);
+			if (targetCCDB.getText().compareTo("default") != 0) {
+				targetVariation = targetCCDB.getText();
+			}
+			
 			if (rcsText.getText().compareTo("") != 0) {
 				maxRcs = Double.parseDouble(rcsText.getText());
 			}
@@ -1088,9 +1101,36 @@ ChangeListener {
 				stepPanel.add(stepChecks[i],c);
 			
 		}
+		c.gridx = 0; c.gridy = 20;
+		stepPanel.add(new JLabel("Target CCDB"),c);
+		targetCCDB.addActionListener(this);
+		Border borderCCDB = BorderFactory.createLineBorder(Color.BLUE, 2);
+		targetCCDB.setBorder(border);
+		targetCCDB.setText("default");
+		c.gridx = 1; c.gridy = 20;
+		stepPanel.add(targetCCDB,c);
+		// hipo version
+				c.gridx = 0;
+				c.gridy = 21;
+				stepPanel.add(new JLabel("Hipo version:"),c);
+				hipoVersion.addItem("hipo 4");
+				hipoVersion.addItem("hipo 3");
+				hipoVersion.addActionListener(this);
+				c.gridx = 1;
+				c.gridy = 21;
+				stepPanel.add(hipoVersion,c);
+
+		/*c.gridx = 0;
+		c.gridy = 1;
+		trPanel.add(new JLabel("Maximum reduced chi squared for track:"),c);
+		rcsText.addActionListener(this);
+		rcsText.setText("75");*/
+		
 		JPanel butPage1 = new configButtonPanel(this, true, "Next");
 		stepOuterPanel.add(butPage1, BorderLayout.SOUTH);
 
+		
+		
 		configPane.add("Select steps", stepOuterPanel);    
 
 		// Previous calibration values
@@ -1121,6 +1161,7 @@ ChangeListener {
 			confPanel.add(engPanels[i-2]);
 		}
 
+		
 		//    Previously:
 		//        for (int i=3; i< engines.length; i++) {
 		//            engPanels[i-3] = new CNDPrevConfigPanel(engines[i]);
@@ -1295,8 +1336,8 @@ ChangeListener {
 		LRPanel.add(new JLabel("LR offset Options:"),c);
 		c.gridx = 1;
 		c.gridy = 0;
-		LRList.addItem("no field");   
 		LRList.addItem("magnetic field on"); 
+		LRList.addItem("no field");   
 		LRList.addActionListener(this);
 		LRPanel.add(LRList,c);
 		// time limit 
@@ -1341,9 +1382,9 @@ ChangeListener {
 		c.gridy = 0;
 		effVPanel.add(new JLabel("Effective velocity graph:"),c);
 		c.gridx = 1;
-		c.gridy = 0;        
-		effVFitList.addItem("Gaussian mean of slices");
+		c.gridy = 0; 
 		effVFitList.addItem("Max position of slices");
+		effVFitList.addItem("Gaussian mean of slices");
 		effVFitList.addActionListener(this);
 		effVPanel.add(effVFitList,c);
 		// fit mode
@@ -1417,9 +1458,9 @@ ChangeListener {
 		c.gridy = 0;
 		utPanel.add(new JLabel("Uturn time loss graph:"),c);
 		c.gridx = 1;
-		c.gridy = 0;        
-		utFitList.addItem("Gaussian mean of slices");
+		c.gridy = 0;    
 		utFitList.addItem("Max position of slices");
+		utFitList.addItem("Gaussian mean of slices");
 		utFitList.addActionListener(this);
 		utPanel.add(utFitList,c);
 		// fit mode
@@ -1477,7 +1518,7 @@ ChangeListener {
 
 		JPanel butPage7 = new configButtonPanel(this, true, "Next");
 		utOuterPanel.add(butPage7, BorderLayout.SOUTH);
-		configPane.add("Uturn Time Loss and LR adjusted", utOuterPanel); 
+		configPane.add("UturnTimeLoss and LR adjusted", utOuterPanel); 
 
 		// att options
 		JPanel attOuterPanel = new JPanel(new BorderLayout());
@@ -1492,8 +1533,8 @@ ChangeListener {
 		attPanel.add(new JLabel("Attenuation length graph:"),c);
 		c.gridx = 1;
 		c.gridy = 0;        
-		attFitList.addItem("Gaussian mean of slices");
 		attFitList.addItem("Max position of slices");
+		attFitList.addItem("Gaussian mean of slices");
 		attFitList.addActionListener(this);
 		attPanel.add(attFitList,c);
 		// fit mode
@@ -1603,8 +1644,8 @@ ChangeListener {
 		energyPanel.add(new JLabel("Log ratio graph:"),c);
 		c.gridx = 1;
 		c.gridy = 0;
-		EFitList.addItem("Gaussian mean of slices");
 		EFitList.addItem("Max position of slices");
+		EFitList.addItem("Gaussian mean of slices");
 		EFitList.addActionListener(this);
 		energyPanel.add(EFitList,c);
 		// min events

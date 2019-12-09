@@ -65,16 +65,16 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
     final double MAX_LEFTRIGHT = 1.0;
     final double MAX_LEFTRIGHT_ERR = 0.5;
 
-     int HIST_BINS = 250;
+     int HIST_BINS = 2000;
 //    final double HIST_X_MIN = (-0.5*CNDCalibrationEngine.BEAM_BUCKET);
 //    final double HIST_X_MAX = (0.5*CNDCalibrationEngine.BEAM_BUCKET);
 //    final double HIST_X_MIN = (61.7*CNDCalibrationEngine.BEAM_BUCKET);
 //    final double HIST_X_MAX = (62.7*CNDCalibrationEngine.BEAM_BUCKET);
-   double HIST_X_MIN = 20;
-   double HIST_X_MAX = 60;
+   double HIST_X_MIN = 30;
+   double HIST_X_MAX = 50;
 
     //Height threshold for leading and trailing edge calculations
-    public double FIT_HEIGHT_THRESHOLD = 0.5;
+    public double FIT_HEIGHT_THRESHOLD = 0.35;
 
     // Fit region around the centre (in percentage of the whole distribution's width) to search for the dip
     public double CENTRAL_REGION_TO_LOOK_FOR_DIP = 0.25;
@@ -240,17 +240,31 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
         for (CNDPaddlePair paddlePair : paddlePairList) {
             
             if (paddlePair.includeInCalib()){
-            	//System.out.println("in paddle descriptor ");
-                int sector = paddlePair.getDescriptor().getSector();
-                int layer = paddlePair.getDescriptor().getLayer();
-                int component = paddlePair.getDescriptor().getComponent();
-//                System.out.println(sector+" "+layer+" "+component);
-//                System.out.println("out paddle descriptor ");
-                // Fill all histograms
-                //System.out.println(sector +" "+ layer +" "+component +" "+"Layer offset "+paddlePair.layerOffset());
+            	
+            	 int sector = paddlePair.getDescriptor().getSector();
+                 int layer = paddlePair.getDescriptor().getLayer();
+                 int component = paddlePair.getDescriptor().getComponent();
+            	
+            	int directHitPaddle = 0;
+				int neighbourHitPaddle = 1;
+
+				double time[] = {paddlePair.tdcToTime(paddlePair.TDCL), paddlePair.tdcToTime(paddlePair.TDCR)};
+
+				// Only going to deal with direct hits!!
+				if (time[0] < time[1]-leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)){
+
+					directHitPaddle = 0;
+					neighbourHitPaddle = 1;
+
+				} else if (time[1] < time[0]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)){
+
+					directHitPaddle = 1;
+					neighbourHitPaddle = 0;
+				}
+            	
               
                 //System.out.println("in histo ");
-                if(paddlePair.layerOffset()!=0.0 && paddlePair.CHARGE==-1){
+                if(paddlePair.layerOffset()!=0.0 && paddlePair.CHARGE==-1 && Math.abs((time[0]-time[1]+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component)))>1.5){//&& paddlePair.CHARGE==-1){
                 dataGroups.getItem(sector, layer, component).getH1F("time_offset_layer").fill(paddlePair.layerOffset());
                // System.out.println("start time "+paddlePair.EVENT_START_TIME);
                 }
@@ -283,7 +297,7 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
             F1D lrFunc = dataGroups.getItem(sector, layer, component).getF1D("func");
             lrFunc.setRange(fitMin, fitMax);
             lrFunc.setParameter(0, (hist.getBinContent(hist.getMaximumBin()))); 
-           // lrFunc.setParLimits(0, (hist.getBinContent(hist.getMaximumBin()))*0.9, (hist.getBinContent(hist.getMaximumBin()))*1.1); 
+            //lrFunc.setParLimits(0, (hist.getBinContent(hist.getMaximumBin()))*0.8, (hist.getBinContent(hist.getMaximumBin()))*1.2); 
             lrFunc.setParameter(1, centreOfDistribution);
             //lrFunc.setParLimits(1,centreOfDistribution*0.9, centreOfDistribution*1.1);
             lrFunc.setParameter(2, 2.*halfWidthOfDistribution);
@@ -435,7 +449,7 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
 
             fit.setRange(fitMin, fitMax);
             fit.setParameter(0, (hist.getBinContent(hist.getMaximumBin()))); // height to draw line at
-			//fit.setParLimits(0, (hist.getBinContent(hist.getMaximumBin()))*0.9, (hist.getBinContent(hist.getMaximumBin()))*1.1);
+			//fit.setParLimits(0, (hist.getBinContent(hist.getMaximumBin()))*0.8, (hist.getBinContent(hist.getMaximumBin()))*1.2);
 			fit.setParameter(1, centreOfDistribution); // height to draw line at
 			//fit.setParLimits(1,centreOfDistribution*0.9, centreOfDistribution*1.1);
 			fit.setParameter(2, 1.3*halfWidthOfDistribution); // height to draw line at

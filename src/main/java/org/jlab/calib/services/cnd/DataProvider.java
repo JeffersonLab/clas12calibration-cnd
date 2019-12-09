@@ -61,7 +61,7 @@ public class DataProvider {
 
 	public static boolean requireMatchedCVTTrack = false;  //Set if strictly required, or to include both matched and unmatched
 	public static boolean requireNOMatchedCVTTrack = false;
-	
+
 	public static boolean onlyTDC = false;      // use to debug TDC to be REMOVED
 
 	private static boolean useHitsBankProcessing = true;  //true to include hits bank processing
@@ -173,7 +173,7 @@ public class DataProvider {
 		// iterate through hits bank getting corresponding adc and tdc
 
 		if(onlyTDC){
-			
+
 			//System.out.println("there");
 			for (int i = 0; i < tdcBank.rows(); i++) {
 				//System.out.println("here");
@@ -182,11 +182,11 @@ public class DataProvider {
 				//System.out.println(tdc);
 				int sector = tdcBank.getByte("sector", i);
 				int layer = tdcBank.getByte("layer", i);
-				
+
 				int component = 1;
 
 				CNDPaddlePair paddlePair = new CNDPaddlePair(sector, layer, component);
-				
+
 				for (int j = i+1; j < tdcBank.rows(); j++) {
 					//System.out.println("here ! ");
 					int orderj = tdcBank.getByte("order", j);
@@ -196,11 +196,11 @@ public class DataProvider {
 					int TDCL=0;
 					int TDCR=0;
 					//System.out.println(tdcj);
-					
+
 					if(sector==sectorj && layer==layerj && Math.abs(order-orderj)==1){
-						
+
 						//System.out.println("here !!!!!!!!!!! ");
-						
+
 						if(order==2){
 							TDCL=tdc;
 							TDCR=tdcj;
@@ -209,39 +209,39 @@ public class DataProvider {
 							TDCL=tdcj;
 							TDCR=tdc;
 						}
-						
+
 						//System.out.println(TDCL +" "+ TDCR);
-						
+
 						paddlePair.setAdcTdc(
 								500,
 								500,
 								TDCL,
 								TDCR);
-						
+
 						paddlePairList.add(paddlePair);
-						
+
 						break;
-						
+
 					}
-					
+
 				}
-				
-				
+
+
 			}
-			
-			
+
+
 		}
-		
-		
+
+
 		if (event.hasBank("CND::hits") && !onlyTDC) {
 
 			DataBank hitsBank = event.getBank("CND::hits");
-//			System.out.println();
-//			hitsBank.show();
-//			event.show();
-//			adcBank.show();
-//			tdcBank.show();
-		
+			//			System.out.println();
+			//			hitsBank.show();
+			//			event.show();
+			//			adcBank.show();
+			//			tdcBank.show();
+
 			for (int hitIndex = 0; hitIndex < hitsBank.rows(); hitIndex++) {
 
 				int sector = (int) hitsBank.getByte("sector", hitIndex);
@@ -251,7 +251,7 @@ public class DataProvider {
 				int component = 1;
 
 				CNDPaddlePair paddlePair = new CNDPaddlePair(sector, layer, component);
-				
+
 
 				int adcIdx1 = hitsBank.getShort("indexLadc", hitIndex);
 				int adcIdx2 = hitsBank.getShort("indexRadc", hitIndex);
@@ -260,14 +260,16 @@ public class DataProvider {
 
 				paddlePair.iTDCL=tdcIdx1;
 				paddlePair.iTDCR=tdcIdx2;
+				
+				paddlePair.TIMEH=hitsBank.getFloat("time", hitIndex);
 
 				paddlePair.setAdcTdc(
 						adcBank.getInt("ADC", adcIdx1),
 						adcBank.getInt("ADC", adcIdx2),
 						tdcBank.getInt("TDC", tdcIdx1),
 						tdcBank.getInt("TDC", tdcIdx2));
-				
-				
+
+
 				//find the paddle using the veff and LR offset
 				int c=0;
 				double vL=paddlePair.veff(1);
@@ -280,10 +282,10 @@ public class DataProvider {
 				}
 				else offset=LR;
 				//System.out.println(" offset "+offset+ " LRad "+LRad +" LR "+LR+ " vl " +vL);
-				
+
 				double delta= paddlePair.paddleLength()*((1./vL)-(1./vR));
 				double deltaR= (paddlePair.TDCL*0.0234) - ((paddlePair.TDCR*0.0234)-offset);
-				
+
 				if (deltaR<delta) {
 					c=1;
 				}
@@ -291,10 +293,10 @@ public class DataProvider {
 					c=2;
 				}
 				else continue;
-				
-				
+
+
 				paddlePair.COMP=c;
-				
+
 				// co-ordinates of track wrt to middle of the counter from CVT
 				double tx = hitsBank.getFloat("tx", hitIndex);
 				double ty = hitsBank.getFloat("ty", hitIndex);
@@ -314,7 +316,9 @@ public class DataProvider {
 				paddlePair.ADC_TIMER = adcBank.getFloat("time", adcIdx2);
 
 				paddlePair.TOF_TIME = hitsBank.getFloat("time", hitIndex);
-				paddlePair.PATH_LENGTH = hitsBank.getFloat("pathlength", hitIndex);
+				
+				// this is the way the pathlength should be retrived, in case it is wrongly calculated the line in the CVT section recalculate it
+				//paddlePair.PATH_LENGTH = hitsBank.getFloat("pathlength", hitIndex);
 
 				if (isCookedOrGEMC == true) {
 					paddlePair.T_LENGTH = hitsBank.getFloat("tLength", hitIndex);
@@ -326,42 +330,63 @@ public class DataProvider {
 				if (event.hasBank("REC::Event")) {
 					DataBank eventRecBank = event.getBank("REC::Event");
 
-					if (eventRecBank.getFloat("STTime", 0) != -1000.0) {
-						                       // System.out.println("STTime = " + eventRecBank.getFloat("STTime", 0));
-						paddlePair.EVENT_START_TIME = eventRecBank.getFloat("STTime", 0);
-
+					double vertexTrigger=0.0;
+					
+					if (event.hasBank("REC::Particle")) {
+							DataBank particle = event.getBank("REC::Particle");
+							
+							vertexTrigger=particle.getFloat("vz", 0);
+						
 					}
+
+					paddlePair.VERTEX_TRIGGER=vertexTrigger;
 					
 					
+					
+					// System.out.println("STTime = " + eventRecBank.getFloat("STTime", 0));
+					if(CNDCalibration.hipoV==CNDCalibration.hipo4) {
+						if (eventRecBank.getFloat("startTime", 0) != -1000.0) {
+							paddlePair.EVENT_START_TIME = eventRecBank.getFloat("startTime", 0);
+							//System.out.println("Stt "+eventRecBank.getFloat("startTime", 0));
+						}
+					}
+
+					if(CNDCalibration.hipoV==CNDCalibration.hipo3) {
+						if (eventRecBank.getFloat("STTime", 0) != -1000.0) {
+							paddlePair.EVENT_START_TIME = eventRecBank.getFloat("STTime", 0);
+						}
+					}
 					paddlePair.RF_TIME = eventRecBank.getFloat("RFTime", 0);
 
 
-					
+
 				}
-				
+
 				if (event.hasBank("RUN::config")) {
 					DataBank eventrunBank = event.getBank("RUN::config");
 
+					paddlePair.RUN= eventrunBank.getInt("run", 0);
+					//System.out.println(paddlePair.RUN);
 					if (eventrunBank.getLong("timestamp", 0) != -1) {
-						                      
+
 						paddlePair.TIME_STAMP = eventrunBank.getLong("timestamp", 0);
 						//System.out.println("phase = " + paddlePair.TRIGGER_PHASE);
 					}				
 				}
-//
-//				if (event.hasBank("RUN::rf")) {
-//					// get the RF time with id=1
-//					DataBank rfBank = event.getBank("RUN::rf");
-//					double trf = 0.0;
-//					for (int rfIdx = 0; rfIdx < rfBank.rows(); rfIdx++) {
-//						if (rfBank.getShort("id", rfIdx) == 1) {
-//							trf = rfBank.getFloat("time", rfIdx);
-//						}
-//					}
-//
-//
-//					paddlePair.RF_TIME = trf;
-//				}
+				//
+				//				if (event.hasBank("RUN::rf")) {
+				//					// get the RF time with id=1
+				//					DataBank rfBank = event.getBank("RUN::rf");
+				//					double trf = 0.0;
+				//					for (int rfIdx = 0; rfIdx < rfBank.rows(); rfIdx++) {
+				//						if (rfBank.getShort("id", rfIdx) == 1) {
+				//							trf = rfBank.getFloat("time", rfIdx);
+				//						}
+				//					}
+				//
+				//
+				//					paddlePair.RF_TIME = trf;
+				//				}
 
 				if (event.hasBank("CTOF::hits")) {
 
@@ -378,23 +403,23 @@ public class DataProvider {
 						double phi=(7.5/2)+(7.5*componentCTOF);
 						double xc=r*Math.cos(Math.toRadians(phi));
 						double yc=r*Math.sin(Math.toRadians(phi));
-						
+
 						double dist=Math.sqrt((xc-paddlePair.XPOSt)*(xc-paddlePair.XPOSt)+(yc-paddlePair.YPOSt)*(yc-paddlePair.YPOSt));
-						
+
 						if(dist<25 && energyCTOF>2){
 							noCTOFmatch=false;
 						}
 					}
-					
+
 					if(noCTOFmatch && DataProvider.requireNOMatchedCVTTrack == true){
 						if(paddlePair.TRACK_ID == -1){
 							paddlePair.TRACK_ID = -2;
-							
-//							System.out.println();
-//							CTOFBank.show();
-//							System.out.println(" component "+paddlePair.getDescriptor().getSector()*2);
-//							hitsBank.show();
-//							event.getBank("CVTRec::Tracks").show();
+
+							//							System.out.println();
+							//							CTOFBank.show();
+							//							System.out.println(" component "+paddlePair.getDescriptor().getSector()*2);
+							//							hitsBank.show();
+							//							event.getBank("CVTRec::Tracks").show();
 						}
 					}
 
@@ -430,6 +455,31 @@ public class DataProvider {
 						paddlePair.VERTEX_Z = trkBank.getFloat("z0", trkId);
 						paddlePair.CHARGE = trkBank.getInt("q", trkId);
 						paddlePair.TRACK_REDCHI2 = trkBank.getFloat("chi2", trkId);
+						
+						double layerh=paddlePair.getDescriptor().getLayer();
+						double qh=paddlePair.CHARGE;
+						double solenoid=event.getBank("RUN::config").getFloat("solenoid", 0);
+						double d0=trkBank.getFloat("d0", trkId)*10.;
+						double tandip=trkBank.getFloat("tandip",trkId);
+						
+						double pathlength=0.0;
+						
+						double rho = (0.000299792458 * qh * 5. * solenoid) / pt;
+						
+						double r= 290 + (layerh - 0.5) * 30. + (layerh - 1) * 1.;//250;//
+						
+						double par = 1. - ((r * r - d0 * d0) * rho * rho) / (2. * (1. + d0 * Math.abs(rho)));
+			       		
+						double newPathLength = Math.abs(Math.acos(par) / rho);
+			        	
+						double zh = paddlePair.VERTEX_Z*10. + newPathLength * tandip;
+						pathlength=Math.sqrt((zh-paddlePair.VERTEX_Z*10.)*(zh-paddlePair.VERTEX_Z*10.)+(newPathLength*newPathLength));
+						
+						paddlePair.PATH_LENGTH = pathlength/10.;
+						
+						double t_tof = (paddlePair.PATH_LENGTH / (beta * 29.98));
+						//if(qh==-1)System.out.println(pathlength);
+						//System.out.println("SLC" + paddlePair.getDescriptor().getSector()+" "+paddlePair.getDescriptor().getLayer()+" "+paddlePair.getDescriptor().getComponent()+" paddle vt " + (paddlePair.TIMEH-paddlePair.EVENT_START_TIME-t_tof) + "  "+ (paddlePair.layerOffset()));
 
 					}
 
@@ -441,41 +491,41 @@ public class DataProvider {
 				//					//System.out.println("trk id "+ paddlePair.TRACK_ID);
 				//				}
 
-//				if (event.hasBank("REC::Particle")) {
-//
-//					DataBank particle = event.getBank("REC::Particle");
-//					boolean allFD=true;
-//					//					System.out.println();
-//					//					System.out.println("event ");
-//					for(int i=0; i<particle.rows(); i++){
-//						double px = particle.getFloat("px", i);
-//						double py = particle.getFloat("py", i);
-//						double pz = particle.getFloat("pz", i);
-//						double q = particle.getInt("charge", i);
-//						double pid = particle.getInt("pid", i);
-//
-//						double p=Math.sqrt(px * px + py * py + pz * pz);
-//						double theta = Math.toDegrees(Math.acos(pz/p));
-//
-//						//						System.out.println("pid "+particle.getInt("pid", i));
-//						//						System.out.println("theta "+theta);
-//						//						System.out.println("q "+q);
-//
-//						if( theta>38 ){
-//							allFD=false;
-//
-//						}
-//
-//					}
-//
-//
-//					if(allFD && DataProvider.requireNOMatchedCVTTrack == true){
-//						if(paddlePair.TRACK_ID == -1){
-//							paddlePair.TRACK_ID = -2;
-//							//System.out.println("event in");
-//						}
-//					}
-//				}
+				//				if (event.hasBank("REC::Particle")) {
+				//
+				//					DataBank particle = event.getBank("REC::Particle");
+				//					boolean allFD=true;
+				//					//					System.out.println();
+				//					//					System.out.println("event ");
+				//					for(int i=0; i<particle.rows(); i++){
+				//						double px = particle.getFloat("px", i);
+				//						double py = particle.getFloat("py", i);
+				//						double pz = particle.getFloat("pz", i);
+				//						double q = particle.getInt("charge", i);
+				//						double pid = particle.getInt("pid", i);
+				//
+				//						double p=Math.sqrt(px * px + py * py + pz * pz);
+				//						double theta = Math.toDegrees(Math.acos(pz/p));
+				//
+				//						//						System.out.println("pid "+particle.getInt("pid", i));
+				//						//						System.out.println("theta "+theta);
+				//						//						System.out.println("q "+q);
+				//
+				//						if( theta>38 ){
+				//							allFD=false;
+				//
+				//						}
+				//
+				//					}
+				//
+				//
+				//					if(allFD && DataProvider.requireNOMatchedCVTTrack == true){
+				//						if(paddlePair.TRACK_ID == -1){
+				//							paddlePair.TRACK_ID = -2;
+				//							//System.out.println("event in");
+				//						}
+				//					}
+				//				}
 
 				//				paddlePair.show();
 				//				System.out.println("Adding paddlePair to list");
@@ -496,7 +546,7 @@ public class DataProvider {
 			if (useNonHitsBankProcessing == true) {
 
 				//System.out.println("HERE!");
-				
+
 				// Firstly do checks if any ADC entries are alive, then add these
 				// Secondly do checks on TDCs entries to see if both ADCs were dead, and even is both ADCs and 1 TDC is dead!
 
@@ -585,19 +635,19 @@ public class DataProvider {
 							}
 
 						}
-						
-//						for (int p = 0; p < adcBank.rows(); p++) {
-//
-//							if (i!=p && sector == adcBank.getByte("sector", p)
-//									&& layer == adcBank.getByte("layer", p)
-//									&& order == adcBank.getByte("order", p)) {
-//								ignorePaddle = true;
-//								break;
-//								// break as there shouldn't be multiple ADC info in bank for the one component...
-//								// don't want to erroneously process the same hit twice either...
-//							}
-//
-//						}
+
+						//						for (int p = 0; p < adcBank.rows(); p++) {
+						//
+						//							if (i!=p && sector == adcBank.getByte("sector", p)
+						//									&& layer == adcBank.getByte("layer", p)
+						//									&& order == adcBank.getByte("order", p)) {
+						//								ignorePaddle = true;
+						//								break;
+						//								// break as there shouldn't be multiple ADC info in bank for the one component...
+						//								// don't want to erroneously process the same hit twice either...
+						//							}
+						//
+						//						}
 
 
 

@@ -3,6 +3,9 @@ package org.jlab.calib.services.cnd;
 import org.jlab.calib.services.cnd.CNDCalibration;
 import org.jlab.calib.services.cnd.CNDCalibrationEngine;
 import org.jlab.detector.base.DetectorDescriptor;
+import org.jlab.detector.calib.utils.CalibrationConstants;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.io.base.DataBank;
 
 /**
 * CND Calibration suite
@@ -16,11 +19,18 @@ public class CNDPaddlePair {
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
     public static String cnd = "CND";
+    
+    public static int currentRun=0;
+    public static int currentRunTarget=0;
 
+    public static CalibrationConstants jitConsts; 
+    public static CalibrationConstants target;
+    
     private DetectorDescriptor desc = new DetectorDescriptor();
 
     public int COMP = 0;
     
+    public int RUN = 0;
     public int ADCL = 0;
     public int ADCR = 0;
     public int TDCL = 0;
@@ -42,6 +52,7 @@ public class CNDPaddlePair {
     public double P_t = 0.0;
     public int TRACK_ID = -1;
     public double VERTEX_Z = 0.0;
+    public double VERTEX_TRIGGER=0.0;
     public double TRACK_REDCHI2 = 0.0;
     public int CHARGE = 0;
     public double RF_TIME = 124.25;
@@ -50,6 +61,7 @@ public class CNDPaddlePair {
     public int PARTICLE_ID = -1;
     public double EVENT_START_TIME = 0.0;
     public double TIME_STAMP = 0.0;
+    public double TIMEH =0.0;
 
     public static final int PID_ELECTRON = 11;
     public static final int PID_PION = 211;
@@ -152,6 +164,30 @@ public class CNDPaddlePair {
     	return this.COMP;
     }
     
+    
+    public double getCNDJitter() {
+		
+		// Get the TDC jitter parameters when runNo changes
+	
+  
+		if(RUN!=currentRun){	
+		DatabaseConstantProvider dcp = new DatabaseConstantProvider(RUN, "default");
+		jitConsts = dcp.readConstants("/calibration/cnd/time_jitter");
+		dcp.disconnect();
+		currentRun=RUN;
+		
+		}
+	    double period = jitConsts.getDoubleValue("period", 0,0,0);
+	    int    phase  = jitConsts.getIntValue("phase", 0,0,0);
+	    int cycles = jitConsts.getIntValue("cycles", 0,0,0);
+	    double triggerphase=0;
+	    if(cycles > 0) triggerphase=period*((TIME_STAMP+phase)%cycles);
+	    //System.out.println(RUN);
+	    //System.out.println(period + " " + phase + " " + cycles + " " + TIME_STAMP + " " + triggerphase);
+		return triggerphase;
+		
+    }
+    
     public double uturnTloss() {
 
         double uturnTloss = 0.0;
@@ -199,7 +235,7 @@ public class CNDPaddlePair {
                     if(veff1!=0.0){
                     	veff=veff1;
                     }
-                    //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+                  //  System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
         }
         return veff;
     }
@@ -228,7 +264,7 @@ public class CNDPaddlePair {
     			 LRoffset=LRoffset1;
     		 }
     		 
-             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+LRoffset);
          }
     	
     	return LRoffset;
@@ -245,7 +281,7 @@ public class CNDPaddlePair {
     			 LRoffset=LRoffset1;
     		 }
     		 
-             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+LRoffset);
          }
     	
     	return LRoffset;
@@ -505,13 +541,24 @@ public class CNDPaddlePair {
         }
         double t_tof = (PATH_LENGTH / (beta * 29.98));
 
+        double vertcorrTrigger = (VERTEX_TRIGGER/29.98);
+        
+        double vertcorrCentral =(VERTEX_Z/29.98);
 
+        //System.out.println( (vertcorrTrigger-vertcorrCentral));
+        
         if (EVENT_START_TIME != 0.0 && t_tof!=0.0 && TRACK_ID!=-1 && TIME_STAMP!=-1) {
         	
         	double phase=4.*((TIME_STAMP+1.)%6.);
         	
-            layerOffset = leftRightTimeAverage() -phase - EVENT_START_TIME - t_tof
+            layerOffset = leftRightTimeAverage() -getCNDJitter() - EVENT_START_TIME + vertcorrTrigger - vertcorrCentral - t_tof
                     - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2);
+            
+            
+           // System.out.println(EVENT_START_TIME);
+           // System.out.println(t_tof);
+           // System.out.println( leftRightTimeAverage() -getCNDJitter() 
+           //         - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2));
         }
         return (layerOffset);
     }
@@ -649,8 +696,19 @@ public class CNDPaddlePair {
     public double zPosCND() {
 
         double hitPositionAdjustment = 0.0;
-
-        // Hard coded values of upstream endface relative to the solenoid centre (assuming target position is vz = 0 )
+        double targetZ = 0.0;
+        //System.out.println(" here");
+        if(RUN!=currentRunTarget){	
+        	System.out.println(" there");
+    		DatabaseConstantProvider dcp = new DatabaseConstantProvider(RUN, CNDCalibration.targetVariation);
+    		target = dcp.readConstants("/geometry/target");
+    		dcp.disconnect();
+    		currentRunTarget=RUN;
+    		
+    		}
+    	targetZ = target.getDoubleValue("position", 0,0,0);
+    	//System.out.println(" here in targetCCDB "+CNDCalibration.targetVariation+" "+targetZ);
+       
         // L1 = 38.999cm
         // L2 & L3 = 38.199cm
         if (desc.getLayer() == 1) {
@@ -659,8 +717,11 @@ public class CNDPaddlePair {
             hitPositionAdjustment = 38.196;
         }
 
-        return ZPOS + hitPositionAdjustment;
-
+        
+       // System.out.println(targetZ);
+        //System.out.println(" here in targetCCDB "+CNDCalibration.targetVariation+" "+targetZ+" "+(ZPOS + hitPositionAdjustment - targetZ)+" "+" "+(ZPOS + hitPositionAdjustment));
+        return ZPOS + hitPositionAdjustment - targetZ; //To be added when this become official
+        
     }
     
     public double zPostCND() {
