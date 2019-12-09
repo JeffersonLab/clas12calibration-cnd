@@ -52,6 +52,7 @@ public class CNDPaddlePair {
     public double P_t = 0.0;
     public int TRACK_ID = -1;
     public double VERTEX_Z = 0.0;
+    public double VERTEX_TRIGGER=0.0;
     public double TRACK_REDCHI2 = 0.0;
     public int CHARGE = 0;
     public double RF_TIME = 124.25;
@@ -60,6 +61,7 @@ public class CNDPaddlePair {
     public int PARTICLE_ID = -1;
     public double EVENT_START_TIME = 0.0;
     public double TIME_STAMP = 0.0;
+    public double TIMEH =0.0;
 
     public static final int PID_ELECTRON = 11;
     public static final int PID_PION = 211;
@@ -233,7 +235,7 @@ public class CNDPaddlePair {
                     if(veff1!=0.0){
                     	veff=veff1;
                     }
-                    //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+                  //  System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
         }
         return veff;
     }
@@ -262,7 +264,7 @@ public class CNDPaddlePair {
     			 LRoffset=LRoffset1;
     		 }
     		 
-             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+LRoffset);
          }
     	
     	return LRoffset;
@@ -279,7 +281,7 @@ public class CNDPaddlePair {
     			 LRoffset=LRoffset1;
     		 }
     		 
-             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+veff);
+             //System.out.println("veff "+desc.getSector()+desc.getLayer()+desc.getComponent()+" "+LRoffset);
          }
     	
     	return LRoffset;
@@ -539,13 +541,24 @@ public class CNDPaddlePair {
         }
         double t_tof = (PATH_LENGTH / (beta * 29.98));
 
+        double vertcorrTrigger = (VERTEX_TRIGGER/29.98);
+        
+        double vertcorrCentral =(VERTEX_Z/29.98);
 
+        //System.out.println( (vertcorrTrigger-vertcorrCentral));
+        
         if (EVENT_START_TIME != 0.0 && t_tof!=0.0 && TRACK_ID!=-1 && TIME_STAMP!=-1) {
         	
         	double phase=4.*((TIME_STAMP+1.)%6.);
         	
-            layerOffset = leftRightTimeAverage() -getCNDJitter() - EVENT_START_TIME - t_tof
+            layerOffset = leftRightTimeAverage() -getCNDJitter() - EVENT_START_TIME + vertcorrTrigger - vertcorrCentral - t_tof
                     - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2);
+            
+            
+           // System.out.println(EVENT_START_TIME);
+           // System.out.println(t_tof);
+           // System.out.println( leftRightTimeAverage() -getCNDJitter() 
+           //         - (paddleLength() / 2) * ((1 / veff(1)) + (1 / veff(2))) - (uturnTloss() / 2) - (LRoffsetad()/2));
         }
         return (layerOffset);
     }
@@ -683,16 +696,17 @@ public class CNDPaddlePair {
     public double zPosCND() {
 
         double hitPositionAdjustment = 0.0;
-
-        
+        double targetZ = 0.0;
+        //System.out.println(" here");
         if(RUN!=currentRunTarget){	
+        	System.out.println(" there");
     		DatabaseConstantProvider dcp = new DatabaseConstantProvider(RUN, CNDCalibration.targetVariation);
     		target = dcp.readConstants("/geometry/target");
     		dcp.disconnect();
     		currentRunTarget=RUN;
     		
     		}
-    	double targetZ = target.getDoubleValue("position", 0,0,0);
+    	targetZ = target.getDoubleValue("position", 0,0,0);
     	//System.out.println(" here in targetCCDB "+CNDCalibration.targetVariation+" "+targetZ);
        
         // L1 = 38.999cm
