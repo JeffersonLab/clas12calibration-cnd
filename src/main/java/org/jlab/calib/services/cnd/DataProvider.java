@@ -466,16 +466,22 @@ public class DataProvider {
 						
 						double rho = (0.000299792458 * qh * 5. * solenoid) / pt;
 						
-						double r= 290 + (layerh - 0.5) * 30. + (layerh - 1) * 1.;//250;//
+						double r= 290 + (layerh - 0.5) * 30. + (layerh - 1) * 1.00;//250;//
 						
 						double par = 1. - ((r * r - d0 * d0) * rho * rho) / (2. * (1. + d0 * Math.abs(rho)));
 			       		
 						double newPathLength = Math.abs(Math.acos(par) / rho);
 			        	
 						double zh = paddlePair.VERTEX_Z*10. + newPathLength * tandip;
-						pathlength=Math.sqrt((zh-paddlePair.VERTEX_Z*10.)*(zh-paddlePair.VERTEX_Z*10.)+(newPathLength*newPathLength));
+						double pathlength1=Math.sqrt((zh-paddlePair.VERTEX_Z*10.)*(zh-paddlePair.VERTEX_Z*10.)+(newPathLength*newPathLength));
 						
-						paddlePair.PATH_LENGTH = pathlength/10.;
+						
+						pathlength=hitsBank.getFloat("pathlength", hitIndex);
+						//System.out.println(pathlength+"   "+(pathlength1/10.)+" "+(pathlength-(pathlength1/10.)));
+						
+						paddlePair.PATH_LENGTH = pathlength;
+						
+						//System.out.println(paddlePair.PATH_LENGTH+" "+pathlength+"   "+(pathlength1/10.)+" "+(pathlength-(pathlength1/10.)));
 						
 						double t_tof = (paddlePair.PATH_LENGTH / (beta * 29.98));
 						//if(qh==-1)System.out.println(pathlength);
