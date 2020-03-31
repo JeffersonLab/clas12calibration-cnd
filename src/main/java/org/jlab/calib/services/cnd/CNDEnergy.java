@@ -126,7 +126,7 @@ public class CNDEnergy extends CNDCalibrationEngine{
 		filename = nextFileName();
 
 		calib = new CalibrationConstants(3,
-				"mip_dir_L/F:mip_dir_L_err/F:mip_indir_L/F:mip_indir_L_err/F:mip_dir_R/F:mip_dir_R_err/F:mip_indir_R/F:mip_indir_R_err/F");
+				"mip_dir_L/F:mip_dir_L_err/F:mip_indir_L/F:mip_indir_L_err/F:mip_dir_R/F:mip_dir_R_err/F:mip_indir_R/F:mip_indir_R_err/F:attlen_L/F:attlen_L_err/F:attlen_R/F:attlen_R_err/F");
 		calib.setName("/calibration/cnd/Energy");
 		calib.setPrecision(5);
 	}
@@ -1303,6 +1303,68 @@ public class CNDEnergy extends CNDCalibrationEngine{
 		return MIPindirRight;
 	}
 
+	public Double getAttLenLeft(int sector, int layer, int component) {
+
+		double attLenLeft = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_LEFT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenLeft = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcLdir").getParameter(1);
+			attLenLeft = -2. / gradient;
+		}
+		return attLenLeft;
+	}
+
+	public Double getAttLenLeftError(int sector, int layer, int component) {
+
+		double attLenLeft = 0.0;
+		double attLenLefterror = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_LEFT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenLeft = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcLdir").getParameter(1);
+			double gradienterror = dataGroups.getItem(sector, layer, component).getF1D("funcLdir").parameter(1).error();
+			attLenLeft = -2. / gradient;
+			attLenLefterror = gradienterror*attLenLeft*attLenLeft/2.;
+		}
+		return attLenLefterror;
+	}
+
+	public Double getAttLenRight(int sector, int layer, int component) {
+
+		double attLenRight = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_RIGHT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenRight = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcRdir").getParameter(1);
+			attLenRight = -2. / gradient;
+		}
+		return attLenRight;
+	}
+
+	public Double getAttLenRightError(int sector, int layer, int component) {
+
+		double attLenRight = 0.0;
+		double attLenRighterror = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_RIGHT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenRight = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcRdir").getParameter(1);
+			double gradienterror = dataGroups.getItem(sector, layer, component).getF1D("funcRdir").parameter(1).error();
+			attLenRight = -2. / gradient;
+			attLenRighterror = gradienterror* attLenRight* attLenRight/2.;
+		}
+		return attLenRighterror;
+	}
+	
 	@Override
 	public void saveRow(int sector, int layer, int component) {
 
@@ -1322,6 +1384,14 @@ public class CNDEnergy extends CNDCalibrationEngine{
 				"mip_indir_R", sector, layer, component);
 		calib.setDoubleValue(ALLOWED_DIFF,
 				"mip_indir_R_err", sector, layer, component);
+		calib.setDoubleValue(getAttLenLeft(sector, layer, component),
+				"attlen_L", sector, layer, component);
+		calib.setDoubleValue(getAttLenLeftError(sector, layer, component),
+				"attlen_L_err", sector, layer, component);
+		calib.setDoubleValue(getAttLenRight(sector, layer, component),
+				"attlen_R", sector, layer, component);
+		calib.setDoubleValue(getAttLenRightError(sector, layer, component),
+				"attlen_R_err", sector, layer, component);
 	}
 
 	@Override
