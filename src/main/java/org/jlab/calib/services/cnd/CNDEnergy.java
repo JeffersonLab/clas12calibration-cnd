@@ -3,6 +3,9 @@ package org.jlab.calib.services.cnd;
 
 import java.awt.BorderLayout;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -122,11 +125,12 @@ public class CNDEnergy extends CNDCalibrationEngine{
 
 		stepName = "ADC-to-Energy conversion";
 		fileNamePrefix = "CND_CALIB_Energy_";
+		fileNamePrefix2 = "CND_CALIB_ATTENUATION_"; // --PN
 		// get file name here so that each timer update overwrites it
 		filename = nextFileName();
-
+		filename2 = nextFileName2(); // --PN
 		calib = new CalibrationConstants(3,
-				"mip_dir_L/F:mip_dir_L_err/F:mip_indir_L/F:mip_indir_L_err/F:mip_dir_R/F:mip_dir_R_err/F:mip_indir_R/F:mip_indir_R_err/F:attlen_L/F:attlen_L_err/F:attlen_R/F:attlen_R_err/F");
+				"attlen_L/F:attlen_L_err/F:attlen_R/F:attlen_R_err/F:mip_dir_L/F:mip_dir_L_err/F:mip_indir_L/F:mip_indir_L_err/F:mip_dir_R/F:mip_dir_R_err/F:mip_indir_R/F:mip_indir_R_err/F");
 		calib.setName("/calibration/cnd/Energy");
 		calib.setPrecision(5);
 	}
@@ -1394,6 +1398,68 @@ public class CNDEnergy extends CNDCalibrationEngine{
 				"attlen_R_err", sector, layer, component);
 	}
 
+	@Override //split table contents into the two files --PN
+	public void writeFile(String filename) {
+
+		//indexes for what is to be written out in lines of the file --PN
+		int[] writeCols = {1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3};
+		
+		try { 
+
+			// Open the output file
+			File outputFile = new File(filename);
+			FileWriter outputFw = new FileWriter(outputFile.getAbsoluteFile());
+			BufferedWriter outputBw = new BufferedWriter(outputFw);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 3) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				outputBw.write(line);
+				outputBw.newLine();
+			}
+
+			outputBw.close();
+			
+			// Open the second output file --PN
+			File outputFile2 = new File(filename2);
+			FileWriter outputFw2 = new FileWriter(outputFile2.getAbsoluteFile());
+			BufferedWriter outputBw2 = new BufferedWriter(outputFw2);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 2) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				outputBw2.write(line);
+				outputBw2.newLine();
+			}
+
+			outputBw2.close();
+			filename2 = nextFileName2(); //increment filename2 after writing (filename incremented by button execution in CNDCalibration.java).
+			
+		}
+		catch(IOException ex) {
+			System.out.println(
+					"Error reading file '" 
+							+ filename + "'");                   
+			// Or we could just do this: 
+			ex.printStackTrace();
+		}
+
+	}
+	
 	@Override
 	public boolean isGoodPaddle(int sector, int layer, int paddle) {
 
