@@ -128,7 +128,7 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 		filename = nextFileName();
 
 		calib = new CalibrationConstants(3,
-				"veff_L/F:veff_L_err/F:veff_R/F:veff_R_err/F");
+				"veff_L/F:veff_L_err/F:veff_R/F:veff_R_err/F:uturn_tloss/F:adjusted_LR_offset/F");
 
 		//                calib = new CalibrationConstants(3,
 		//                "tdc_conv_left/F:tdc_conv_right/F");
@@ -959,6 +959,67 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 		return veffError;
 	}
 
+	public Double getUturnTloss(int sector, int layer, int component) {
+
+		double cLeft = 0.0;
+		double cRight = 0.0;
+		double overrideLeftVal = constants.getItem(sector, layer, component)[OVERRIDE_LEFT];
+		double overrideRightVal = constants.getItem(sector, layer, component)[OVERRIDE_RIGHT];
+
+		if (overrideLeftVal != UNDEFINED_OVERRIDE) {
+			cLeft = overrideLeftVal;
+		}
+		else {
+			double intercept = dataGroups.getItem(sector,layer,component).getF1D("funcL").getParameter(0);
+			cLeft = -1 * intercept;
+		}
+
+		if (overrideRightVal != UNDEFINED_OVERRIDE) {
+			cRight = overrideRightVal;
+		}
+		else {
+			double intercept = dataGroups.getItem(sector,layer,component).getF1D("funcR").getParameter(0);
+			cRight = -1 * intercept;
+		}
+
+		CNDPaddlePair  tempPaddlePair = new CNDPaddlePair(sector,layer,1);
+		double uturnTloss = cLeft + cRight - (tempPaddlePair.paddleLength() * ( (1./getEffVLeft(sector, layer, component))+(1./getEffVRight(sector, layer, component)) ));
+
+		if (sector == 1){
+			System.out.println("cLeft = " + cLeft);
+			System.out.println("cRight = " + cRight);
+			System.out.println("tempPaddlePair.paddleLength() = " + tempPaddlePair.paddleLength());
+			System.out.println("Other term = " + ( (1./getEffVLeft(sector, layer, component))+(1./getEffVRight(sector, layer, component)) ));
+
+		}
+
+		return uturnTloss;
+	}   
+
+	public Double getLRoffsetAdjust(int sector, int layer, int component){
+
+		double LRoffsetAdjust = 0.0;
+
+		double gradientL = dataGroups.getItem(sector,layer,component).getF1D("funcL")
+				.getParameter(1);
+		double gradientR = dataGroups.getItem(sector,layer,component).getF1D("funcR")
+				.getParameter(1);
+
+		double Cleft = dataGroups.getItem(sector,layer,component).getF1D("funcL").getParameter(0);
+		double CRight = dataGroups.getItem(sector,layer,component).getF1D("funcR").getParameter(0);
+
+		CNDPaddlePair  tempPaddlePair = new CNDPaddlePair(sector,layer,1);
+
+		LRoffsetAdjust = CRight - Cleft;
+
+		System.out.println();
+		System.out.println("CleftErr  = " + Cleft);
+		System.out.println("CRightErr = " + CRight);
+		System.out.println("utlossError = " + LRoffsetAdjust);
+
+		return LRoffsetAdjust+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component);
+	}
+	
 	@Override
 	public void saveRow(int sector, int layer, int component) {
 
@@ -979,8 +1040,15 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 		//                        "veff_R_err", sector, layer, component);
 		calib.setDoubleValue(getVeffRError(sector, layer, component),
 				"veff_R_err", sector, layer, component);
+		
+		calib.setDoubleValue(getUturnTloss(sector, layer, component),
+				"uturn_tloss", sector, layer, component);
+		//        calib.setDoubleValue(getUturnTlossError(sector, layer, component),
+		//                        "uturn_tloss_err", sector, layer, component);
 
-	}
+		calib.setDoubleValue(getLRoffsetAdjust(sector, layer, component),
+				"adjusted_LR_offset", sector, layer, component);
+}
 
 	@Override
 	public boolean isGoodPaddle(int sector, int layer, int paddle) {
