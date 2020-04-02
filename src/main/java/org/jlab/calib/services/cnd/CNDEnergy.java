@@ -123,7 +123,7 @@ public class CNDEnergy extends CNDCalibrationEngine{
 
 	public CNDEnergy() {
 
-		stepName = "ADC-to-Energy conversion";
+		stepName = "Attenuation & ADC-to-Energy Conversion";
 		fileNamePrefix = "CND_CALIB_Energy_";
 		fileNamePrefix2 = "CND_CALIB_ATTENUATION_"; // --PN
 		// get file name here so that each timer update overwrites it

@@ -1058,7 +1058,7 @@ ChangeListener {
 		Panel.add(intro1,c1);
 		c1.gridx = 0;
 		c1.gridy = 4;
-		JLabel intro2= new JLabel("- In \"Select Steps\" choose the calibration you want to perform");
+		JLabel intro2= new JLabel("- In \"Select Step\" choose the calibration you want to perform");
 		Panel.add(intro2,c1);
 		c1.gridx = 0;
 		c1.gridy = 5;
@@ -1066,7 +1066,7 @@ ChangeListener {
 		Panel.add(intro3,c1);
 		c1.gridx = 0;
 		c1.gridy = 6;
-		JLabel intro4= new JLabel("- In \"Tracking options\" add some cuts on the match CVT tracks. WARNING these cuts are used for every calibration step.");
+		JLabel intro4= new JLabel("- In \"Tracking / General\" add some cuts on the match CVT tracks. WARNING these cuts are used for every calibration step.");
 		Panel.add(intro4,c1);
 		c1.gridx = 0;
 		c1.gridy = 7;
@@ -1131,7 +1131,7 @@ ChangeListener {
 
 		
 		
-		configPane.add("Select steps", stepOuterPanel);    
+		configPane.add("Select Step", stepOuterPanel);    
 
 		// Previous calibration values
 		JPanel confOuterPanel = new JPanel(new BorderLayout());
@@ -1161,6 +1161,10 @@ ChangeListener {
 			confPanel.add(engPanels[i-2]);
 		}
 
+		/* YOU ARE HERE!
+		 * PLAY AROUND WITH THIS LINE FROM CNDPrevConfigPanel:
+		 * this.setBorder(BorderFactory.createTitledBorder(engine.stepName))
+		 * CAN THIS BE USED TO MANUALLY SET THE LABLES ON THESE BORDERS? */
 		
 		//    Previously:
 		//        for (int i=3; i< engines.length; i++) {
@@ -1172,7 +1176,7 @@ ChangeListener {
 		confOuterPanel.add(confPanel, BorderLayout.NORTH);
 		confOuterPanel.add(butPage2, BorderLayout.SOUTH);
 
-		configPane.add("Previous calibration values", confOuterPanel);
+		configPane.add("Previous Calibration Values", confOuterPanel);
 
 		// Tracking options
 		JPanel trOuterPanel = new JPanel(new BorderLayout());
@@ -1443,10 +1447,10 @@ ChangeListener {
 
 		JPanel butPage6 = new configButtonPanel(this, true, "Next");
 		effVOuterPanel.add(butPage6, BorderLayout.SOUTH);
-		configPane.add("Effective Velocity", effVOuterPanel);  
+		configPane.add("Effective Velocity, Uturn-TimeLoss & Adjusted LR-Offset", effVOuterPanel);  
 
-
-		// ut options
+//Suppress tabs for uturn' and Attenuation. -- PN
+/*		// ut options
 		JPanel utOuterPanel = new JPanel(new BorderLayout());
 		JPanel utPanel = new JPanel(new GridBagLayout());
 		utOuterPanel.add(utPanel, BorderLayout.NORTH);
@@ -1593,7 +1597,7 @@ ChangeListener {
 		JPanel butPage8= new configButtonPanel(this, true, "Next");
 		attOuterPanel.add(butPage8, BorderLayout.SOUTH);
 		configPane.add("Attenuation", attOuterPanel); 
-
+*/                                                                    //Suppress tabs for uturn' and Attenuation. -- PN
 
 		//LR offset
 		JPanel timeOuterPanel = new JPanel(new BorderLayout());
@@ -1627,7 +1631,7 @@ ChangeListener {
 
 		JPanel butPagetime = new configButtonPanel(this, true, "Next");
 		timeOuterPanel.add(butPagetime, BorderLayout.SOUTH);
-		configPane.add("Global time Offset", timeOuterPanel);    
+		configPane.add("Global TimeOffset", timeOuterPanel);    
 
 
 
@@ -1727,7 +1731,7 @@ ChangeListener {
 
 		JPanel butPage9 = new configButtonPanel(this, true, "Finish");        
 		energyOuterPanel.add(butPage9, BorderLayout.SOUTH);
-		configPane.add("Energy", energyOuterPanel);
+		configPane.add("Attenuation & Energy", energyOuterPanel);
 
 
 

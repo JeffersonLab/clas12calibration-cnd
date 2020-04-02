@@ -129,7 +129,7 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 
 	public CNDEffVEventListener() {
 
-		stepName = "EffV";
+		stepName = "EffV, Uturn-Loss & LR-Adj.";
 		fileNamePrefix = "CND_CALIB_EFFV_";
 		fileNamePrefix2 = "CND_CALIB_UTURNTLOSS_";
 		// get file name here so that each timer update overwrites it
