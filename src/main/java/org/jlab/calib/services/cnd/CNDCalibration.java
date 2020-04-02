@@ -1090,7 +1090,7 @@ ChangeListener {
 
 		int gridy=0;
 		for (int i=0; i< engines.length; i++) {
-			if(i== HV || i== TIME_OFFSETS_RF || i== TDC_CONV )continue;
+			if(i== HV || i== TIME_OFFSETS_RF || i== TDC_CONV || i== UTURN_TLOSS || i== ATTENUATION)continue; //added exceptions for attenuation and LR_offset --PN
 				c.gridx = 0; c.gridy = gridy;
 				gridy++;
 				c.anchor = c.WEST;
