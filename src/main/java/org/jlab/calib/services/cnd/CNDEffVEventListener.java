@@ -1,9 +1,13 @@
 package org.jlab.calib.services.cnd; 
 
 import java.awt.BorderLayout;
+
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +49,9 @@ import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
 import org.jlab.utils.groups.IndexedList;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /**
  * CND Calibration suite
@@ -124,8 +131,10 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 
 		stepName = "EffV";
 		fileNamePrefix = "CND_CALIB_EFFV_";
+		fileNamePrefix2 = "CND_CALIB_UTURNTLOSS_";
 		// get file name here so that each timer update overwrites it
 		filename = nextFileName();
+		filename2 = nextFileName2(); // --PN
 
 		calib = new CalibrationConstants(3,
 				"veff_L/F:veff_L_err/F:veff_R/F:veff_R_err/F:uturn_tloss/F:adjusted_LR_offset/F");
@@ -1018,6 +1027,123 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 		System.out.println("utlossError = " + LRoffsetAdjust);
 
 		return LRoffsetAdjust+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component);
+	}
+	
+	@Override
+	public void writeFile(String filename) {
+
+		//indexes for what is to be written out in lines of the file --PN
+		int[] writeCols = {1, 1, 1, 2, 2, 2, 2, 3, 4};
+		
+		try { //EffV output
+
+			// Open the output file
+			File outputFile = new File(filename);
+			FileWriter outputFw = new FileWriter(outputFile.getAbsoluteFile());
+			BufferedWriter outputBw = new BufferedWriter(outputFw);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 2) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				outputBw.write(line);
+				outputBw.newLine();
+			}
+
+			outputBw.close();
+
+			
+			//filename2 = nextFileName2(); //increment filename2 after writing (filename incremented by button execution in CNDCalibration.java).
+			// Open the second output file for uturn --PN
+			File outputFile2 = new File("uturn_LRad_"+filename2);
+			FileWriter outputFw2 = new FileWriter(outputFile2.getAbsoluteFile());
+			BufferedWriter outputBw2 = new BufferedWriter(outputFw2);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 3 || writeCols[j] == 4) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				
+				outputBw2.write(line);
+				outputBw2.newLine();
+			}
+
+			outputBw2.close();
+		
+			// Open the second output file for LR_adj --PN
+			File outputFile3 = new File("LRoffset_adjusted_"+filename2);
+			FileWriter outputFw3 = new FileWriter(outputFile3.getAbsoluteFile());
+			BufferedWriter outputBw3 = new BufferedWriter(outputFw3);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if(writeCols[j] == 1 || writeCols[j] == 4){
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				line = line+" 0.0";
+				outputBw3.write(line);
+				outputBw3.newLine();
+			}
+
+			outputBw3.close();
+			filename2 = nextFileName2(); //increment filename2 after writing both files (filename incremented by button execution in CNDCalibration.java).
+
+		}
+		catch(IOException ex) {
+			System.out.println(
+					"Error reading file '" 
+							+ filename2 + "'");                   
+			ex.printStackTrace();
+		}
+
+	}
+	
+	//added for the purposes of updating name of a second file --PN
+	@Override
+	public String nextFileName2() {
+
+		// Get the next file name
+		Date today = new Date();
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+		String todayString = dateFormat.format(today);
+		String filePrefix = fileNamePrefix2 + todayString;
+		int newFileNum = 0;
+
+		File dir = new File(".");
+		File[] filesList = dir.listFiles();
+
+		for (File file : filesList) {
+			if (file.isFile()) {
+				String fileName = file.getName();
+				if (fileName.matches(".*" + filePrefix + "[.]\\d+[.]txt")) {
+					String fileNumString = fileName.substring(
+							fileName.indexOf('.') + 1,
+							fileName.lastIndexOf('.'));
+					int fileNum = Integer.parseInt(fileNumString);
+					if (fileNum >= newFileNum)
+						newFileNum = fileNum + 1;
+
+				}
+			}
+		}
+		return filePrefix + "." + newFileNum + ".txt";
 	}
 	
 	@Override
