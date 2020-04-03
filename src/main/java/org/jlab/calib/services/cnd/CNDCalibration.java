@@ -1158,13 +1158,19 @@ ChangeListener {
 
 		for (int i=2; i< 5; i++) {
 			engPanels[i-2] = new CNDPrevConfigPanel(engines[i]);
+			// Override the Prev.Calib titles with more instructive labled after changing engine names --PN
+			if (i-2 == 0) {
+				engPanels[i-2].setBorder(BorderFactory.createTitledBorder("TimeOffset_LR [Adj. LR-Offset for Global TimeOffset step]"));
+			}
+			if (i-2 == 1) {
+				engPanels[i-2].setBorder(BorderFactory.createTitledBorder("Effective Velocity"));
+			}
+			if (i-2 == 2) {
+				engPanels[i-2].setBorder(BorderFactory.createTitledBorder("Adjusted LR-Offset / Uturn-TimeLoss"));
+			}
 			confPanel.add(engPanels[i-2]);
-		}
 
-		/* YOU ARE HERE!
-		 * PLAY AROUND WITH THIS LINE FROM CNDPrevConfigPanel:
-		 * this.setBorder(BorderFactory.createTitledBorder(engine.stepName))
-		 * CAN THIS BE USED TO MANUALLY SET THE LABLES ON THESE BORDERS? */
+		}
 		
 		//    Previously:
 		//        for (int i=3; i< engines.length; i++) {
