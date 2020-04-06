@@ -77,8 +77,6 @@ public class CNDCalibration implements IDataEventListener, ActionListener,
 CalibrationConstantsListener, DetectorListener,
 ChangeListener {
 
-// pull test
-
 	// main panel
 	JPanel          pane         = null;
 	JFrame  innerConfigFrame = new JFrame("Configure CND calibration settings");
