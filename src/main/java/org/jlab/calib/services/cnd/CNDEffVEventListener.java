@@ -1047,7 +1047,7 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 				for (int j=0; j<calib.getColumnCount(); j++) {
 					if (writeCols[j] == 1 || writeCols[j] == 2) {
 						line = line+calib.getValueAt(i, j);
-						if (j<calib.getColumnCount()-1) {
+						if (j<calib.getColumnCount()-1 && j != 6) { //hard code exception to stop whitespace being added at the end of each row of EffV file --PN
 							line = line+" ";
 						}
 					}
