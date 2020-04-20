@@ -187,9 +187,11 @@ public class CNDTimeOffsetslayerEventListener extends CNDCalibrationEngine {
 		}
 		if(CNDCalibration.mintime!=0.0){
 			HIST_X_MIN =CNDCalibration.mintime;
+			System.out.println("MIN VALUE SEEN INSIDE GLOB::resetEventListener() : " + CNDCalibration.mintime);
 		}
-		if(CNDCalibration.maxtimeLR!=0.0){
+		if(CNDCalibration.maxtime!=0.0){
 			HIST_X_MAX =CNDCalibration.maxtime;
+			System.out.println("MAX VALUE SEEN INSIDE GLOB::resetEventListener() : " + CNDCalibration.maxtime);
 		}
 
         // GM perform init processing

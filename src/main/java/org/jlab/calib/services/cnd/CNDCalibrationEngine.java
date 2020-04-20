@@ -64,7 +64,8 @@ public class CNDCalibrationEngine extends CalibrationEngine {
 	public String stepName = "Unknown";
 	public String fileNamePrefix = "Unknown";
 	public String filename = "Unknown.txt";
-
+	public String fileNamePrefix2 = "Unknown"; //--PN
+	public String filename2 = "Unknown.txt"; // --PN
 	// configuration
 	public int calDBSource = 0;
 	public static final int CAL_DEFAULT = 0;
@@ -346,6 +347,36 @@ public class CNDCalibrationEngine extends CalibrationEngine {
 		return filePrefix + "." + newFileNum + ".txt";
 	}
 
+	//added for the purposes of updating name of a second file --PN
+	public String nextFileName2() {
+
+		// Get the next file name
+		Date today = new Date();
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+		String todayString = dateFormat.format(today);
+		String filePrefix = fileNamePrefix2 + todayString;
+		int newFileNum = 0;
+
+		File dir = new File(".");
+		File[] filesList = dir.listFiles();
+
+		for (File file : filesList) {
+			if (file.isFile()) {
+				String fileName = file.getName();
+				if (fileName.matches(filePrefix + "[.]\\d+[.]txt")) {
+					String fileNumString = fileName.substring(
+							fileName.indexOf('.') + 1,
+							fileName.lastIndexOf('.'));
+					int fileNum = Integer.parseInt(fileNumString);
+					if (fileNum >= newFileNum)
+						newFileNum = fileNum + 1;
+
+				}
+			}
+		}
+		return filePrefix + "." + newFileNum + ".txt";
+	}
+	
 	public void customFit(int sector, int layer, int paddle) {
 		// overridden in calibration step class
 	}

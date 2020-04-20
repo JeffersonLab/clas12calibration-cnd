@@ -3,6 +3,9 @@ package org.jlab.calib.services.cnd;
 
 import java.awt.BorderLayout;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -120,13 +123,14 @@ public class CNDEnergy extends CNDCalibrationEngine{
 
 	public CNDEnergy() {
 
-		stepName = "ADC-to-Energy conversion";
+		stepName = "Attenuation & ADC-to-Energy Conversion";
 		fileNamePrefix = "CND_CALIB_Energy_";
+		fileNamePrefix2 = "CND_CALIB_ATTENUATION_"; // --PN
 		// get file name here so that each timer update overwrites it
 		filename = nextFileName();
-
+		filename2 = nextFileName2(); // --PN
 		calib = new CalibrationConstants(3,
-				"mip_dir_L/F:mip_dir_L_err/F:mip_indir_L/F:mip_indir_L_err/F:mip_dir_R/F:mip_dir_R_err/F:mip_indir_R/F:mip_indir_R_err/F");
+				"attlen_L/F:attlen_L_err/F:attlen_R/F:attlen_R_err/F:mip_dir_L/F:mip_dir_L_err/F:mip_indir_L/F:mip_indir_L_err/F:mip_dir_R/F:mip_dir_R_err/F:mip_indir_R/F:mip_indir_R_err/F");
 		calib.setName("/calibration/cnd/Energy");
 		calib.setPrecision(5);
 	}
@@ -1303,6 +1307,68 @@ public class CNDEnergy extends CNDCalibrationEngine{
 		return MIPindirRight;
 	}
 
+	public Double getAttLenLeft(int sector, int layer, int component) {
+
+		double attLenLeft = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_LEFT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenLeft = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcLdir").getParameter(1);
+			attLenLeft = -2. / gradient;
+		}
+		return attLenLeft;
+	}
+
+	public Double getAttLenLeftError(int sector, int layer, int component) {
+
+		double attLenLeft = 0.0;
+		double attLenLefterror = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_LEFT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenLeft = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcLdir").getParameter(1);
+			double gradienterror = dataGroups.getItem(sector, layer, component).getF1D("funcLdir").parameter(1).error();
+			attLenLeft = -2. / gradient;
+			attLenLefterror = gradienterror*attLenLeft*attLenLeft/2.;
+		}
+		return attLenLefterror;
+	}
+
+	public Double getAttLenRight(int sector, int layer, int component) {
+
+		double attLenRight = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_RIGHT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenRight = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcRdir").getParameter(1);
+			attLenRight = -2. / gradient;
+		}
+		return attLenRight;
+	}
+
+	public Double getAttLenRightError(int sector, int layer, int component) {
+
+		double attLenRight = 0.0;
+		double attLenRighterror = 0.0;
+		double overrideVal = constants.getItem(sector, layer, component)[OVERRIDE_RIGHT];
+
+		if (overrideVal != UNDEFINED_OVERRIDE) {
+			attLenRight = overrideVal;
+		} else {
+			double gradient = dataGroups.getItem(sector, layer, component).getF1D("funcRdir").getParameter(1);
+			double gradienterror = dataGroups.getItem(sector, layer, component).getF1D("funcRdir").parameter(1).error();
+			attLenRight = -2. / gradient;
+			attLenRighterror = gradienterror* attLenRight* attLenRight/2.;
+		}
+		return attLenRighterror;
+	}
+	
 	@Override
 	public void saveRow(int sector, int layer, int component) {
 
@@ -1322,8 +1388,78 @@ public class CNDEnergy extends CNDCalibrationEngine{
 				"mip_indir_R", sector, layer, component);
 		calib.setDoubleValue(ALLOWED_DIFF,
 				"mip_indir_R_err", sector, layer, component);
+		calib.setDoubleValue(getAttLenLeft(sector, layer, component),
+				"attlen_L", sector, layer, component);
+		calib.setDoubleValue(getAttLenLeftError(sector, layer, component),
+				"attlen_L_err", sector, layer, component);
+		calib.setDoubleValue(getAttLenRight(sector, layer, component),
+				"attlen_R", sector, layer, component);
+		calib.setDoubleValue(getAttLenRightError(sector, layer, component),
+				"attlen_R_err", sector, layer, component);
 	}
 
+	@Override //split table contents into the two files --PN
+	public void writeFile(String filename) {
+
+		//indexes for what is to be written out in lines of the file --PN
+		int[] writeCols = {1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3};
+		
+		try { 
+
+			// Open the output file
+			File outputFile = new File(filename);
+			FileWriter outputFw = new FileWriter(outputFile.getAbsoluteFile());
+			BufferedWriter outputBw = new BufferedWriter(outputFw);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 3) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				outputBw.write(line);
+				outputBw.newLine();
+			}
+
+			outputBw.close();
+			
+			// Open the second output file --PN
+			File outputFile2 = new File(filename2);
+			FileWriter outputFw2 = new FileWriter(outputFile2.getAbsoluteFile());
+			BufferedWriter outputBw2 = new BufferedWriter(outputFw2);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 2) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1 && j != 6) { //hard code exception to stop whitespace being added at the end of each row of Att' file --PN
+							line = line+" ";
+						}
+					}
+				}
+				outputBw2.write(line);
+				outputBw2.newLine();
+			}
+
+			outputBw2.close();
+			filename2 = nextFileName2(); //increment filename2 after writing (filename incremented by button execution in CNDCalibration.java).
+			
+		}
+		catch(IOException ex) {
+			System.out.println(
+					"Error reading file '" 
+							+ filename + "'");                   
+			// Or we could just do this: 
+			ex.printStackTrace();
+		}
+
+	}
+	
 	@Override
 	public boolean isGoodPaddle(int sector, int layer, int paddle) {
 

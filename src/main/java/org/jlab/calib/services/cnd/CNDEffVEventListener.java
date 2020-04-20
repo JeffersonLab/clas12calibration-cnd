@@ -1,9 +1,13 @@
 package org.jlab.calib.services.cnd; 
 
 import java.awt.BorderLayout;
+
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +49,9 @@ import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
 import org.jlab.utils.groups.IndexedList;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /**
  * CND Calibration suite
@@ -122,13 +129,15 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 
 	public CNDEffVEventListener() {
 
-		stepName = "EffV";
+		stepName = "EffV, Uturn-Loss & LR-Adj.";
 		fileNamePrefix = "CND_CALIB_EFFV_";
+		fileNamePrefix2 = "CND_CALIB_UTURNTLOSS_";
 		// get file name here so that each timer update overwrites it
 		filename = nextFileName();
+		filename2 = nextFileName2(); // --PN
 
 		calib = new CalibrationConstants(3,
-				"veff_L/F:veff_L_err/F:veff_R/F:veff_R_err/F");
+				"veff_L/F:veff_L_err/F:veff_R/F:veff_R_err/F:uturn_tloss/F:adjusted_LR_offset/F");
 
 		//                calib = new CalibrationConstants(3,
 		//                "tdc_conv_left/F:tdc_conv_right/F");
@@ -959,6 +968,184 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 		return veffError;
 	}
 
+	public Double getUturnTloss(int sector, int layer, int component) {
+
+		double cLeft = 0.0;
+		double cRight = 0.0;
+		double overrideLeftVal = constants.getItem(sector, layer, component)[OVERRIDE_LEFT];
+		double overrideRightVal = constants.getItem(sector, layer, component)[OVERRIDE_RIGHT];
+
+		if (overrideLeftVal != UNDEFINED_OVERRIDE) {
+			cLeft = overrideLeftVal;
+		}
+		else {
+			double intercept = dataGroups.getItem(sector,layer,component).getF1D("funcL").getParameter(0);
+			cLeft = -1 * intercept;
+		}
+
+		if (overrideRightVal != UNDEFINED_OVERRIDE) {
+			cRight = overrideRightVal;
+		}
+		else {
+			double intercept = dataGroups.getItem(sector,layer,component).getF1D("funcR").getParameter(0);
+			cRight = -1 * intercept;
+		}
+
+		CNDPaddlePair  tempPaddlePair = new CNDPaddlePair(sector,layer,1);
+		double uturnTloss = cLeft + cRight - (tempPaddlePair.paddleLength() * ( (1./getEffVLeft(sector, layer, component))+(1./getEffVRight(sector, layer, component)) ));
+
+		if (sector == 1){
+			System.out.println("cLeft = " + cLeft);
+			System.out.println("cRight = " + cRight);
+			System.out.println("tempPaddlePair.paddleLength() = " + tempPaddlePair.paddleLength());
+			System.out.println("Other term = " + ( (1./getEffVLeft(sector, layer, component))+(1./getEffVRight(sector, layer, component)) ));
+
+		}
+
+		return uturnTloss;
+	}   
+
+	public Double getLRoffsetAdjust(int sector, int layer, int component){
+
+		double LRoffsetAdjust = 0.0;
+
+		double gradientL = dataGroups.getItem(sector,layer,component).getF1D("funcL")
+				.getParameter(1);
+		double gradientR = dataGroups.getItem(sector,layer,component).getF1D("funcR")
+				.getParameter(1);
+
+		double Cleft = dataGroups.getItem(sector,layer,component).getF1D("funcL").getParameter(0);
+		double CRight = dataGroups.getItem(sector,layer,component).getF1D("funcR").getParameter(0);
+
+		CNDPaddlePair  tempPaddlePair = new CNDPaddlePair(sector,layer,1);
+
+		LRoffsetAdjust = CRight - Cleft;
+
+		System.out.println();
+		System.out.println("CleftErr  = " + Cleft);
+		System.out.println("CRightErr = " + CRight);
+		System.out.println("utlossError = " + LRoffsetAdjust);
+
+		return LRoffsetAdjust+leftRightValues.getDoubleValue("time_offset_LR", sector, layer, component);
+	}
+	
+	@Override
+	public void writeFile(String filename) {
+
+		//indexes for what is to be written out in lines of the file --PN
+		int[] writeCols = {1, 1, 1, 2, 2, 2, 2, 3, 4};
+		
+		try { //EffV output
+
+			// Open the output file
+			File outputFile = new File(filename);
+			FileWriter outputFw = new FileWriter(outputFile.getAbsoluteFile());
+			BufferedWriter outputBw = new BufferedWriter(outputFw);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 2) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1 && j != 6) { //hard code exception to stop whitespace being added at the end of each row of EffV file --PN
+							line = line+" ";
+						}
+					}
+				}
+				outputBw.write(line);
+				outputBw.newLine();
+			}
+
+			outputBw.close();
+
+			
+			//filename2 = nextFileName2(); //increment filename2 after writing (filename incremented by button execution in CNDCalibration.java).
+			// Open the second output file for uturn --PN
+			File outputFile2 = new File("uturn_LRad_"+filename2);
+			FileWriter outputFw2 = new FileWriter(outputFile2.getAbsoluteFile());
+			BufferedWriter outputBw2 = new BufferedWriter(outputFw2);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if (writeCols[j] == 1 || writeCols[j] == 3 || writeCols[j] == 4) {
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				
+				outputBw2.write(line);
+				outputBw2.newLine();
+			}
+
+			outputBw2.close();
+		
+			// Open the second output file for LR_adj --PN
+			File outputFile3 = new File("LRoffset_adjusted_"+filename2);
+			FileWriter outputFw3 = new FileWriter(outputFile3.getAbsoluteFile());
+			BufferedWriter outputBw3 = new BufferedWriter(outputFw3);
+
+			for (int i=0; i<calib.getRowCount(); i++) {
+				String line = new String();
+				for (int j=0; j<calib.getColumnCount(); j++) {
+					if(writeCols[j] == 1 || writeCols[j] == 4){
+						line = line+calib.getValueAt(i, j);
+						if (j<calib.getColumnCount()-1) {
+							line = line+" ";
+						}
+					}
+				}
+				line = line+" 0.0";
+				outputBw3.write(line);
+				outputBw3.newLine();
+			}
+
+			outputBw3.close();
+			filename2 = nextFileName2(); //increment filename2 after writing both files (filename incremented by button execution in CNDCalibration.java).
+
+		}
+		catch(IOException ex) {
+			System.out.println(
+					"Error reading file '" 
+							+ filename2 + "'");                   
+			ex.printStackTrace();
+		}
+
+	}
+	
+	//added for the purposes of updating name of a second file --PN
+	@Override
+	public String nextFileName2() {
+
+		// Get the next file name
+		Date today = new Date();
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+		String todayString = dateFormat.format(today);
+		String filePrefix = fileNamePrefix2 + todayString;
+		int newFileNum = 0;
+
+		File dir = new File(".");
+		File[] filesList = dir.listFiles();
+
+		for (File file : filesList) {
+			if (file.isFile()) {
+				String fileName = file.getName();
+				if (fileName.matches(".*" + filePrefix + "[.]\\d+[.]txt")) {
+					String fileNumString = fileName.substring(
+							fileName.indexOf('.') + 1,
+							fileName.lastIndexOf('.'));
+					int fileNum = Integer.parseInt(fileNumString);
+					if (fileNum >= newFileNum)
+						newFileNum = fileNum + 1;
+
+				}
+			}
+		}
+		return filePrefix + "." + newFileNum + ".txt";
+	}
+	
 	@Override
 	public void saveRow(int sector, int layer, int component) {
 
@@ -979,8 +1166,15 @@ public class CNDEffVEventListener extends CNDCalibrationEngine {
 		//                        "veff_R_err", sector, layer, component);
 		calib.setDoubleValue(getVeffRError(sector, layer, component),
 				"veff_R_err", sector, layer, component);
+		
+		calib.setDoubleValue(getUturnTloss(sector, layer, component),
+				"uturn_tloss", sector, layer, component);
+		//        calib.setDoubleValue(getUturnTlossError(sector, layer, component),
+		//                        "uturn_tloss_err", sector, layer, component);
 
-	}
+		calib.setDoubleValue(getLRoffsetAdjust(sector, layer, component),
+				"adjusted_LR_offset", sector, layer, component);
+}
 
 	@Override
 	public boolean isGoodPaddle(int sector, int layer, int paddle) {
