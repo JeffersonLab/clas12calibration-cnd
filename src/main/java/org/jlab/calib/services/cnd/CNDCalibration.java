@@ -1160,7 +1160,7 @@ ChangeListener {
 			engPanels[i-2] = new CNDPrevConfigPanel(engines[i]);
 			// Override the Prev.Calib titles with more instructive labled after changing engine names --PN
 			if (i-2 == 0) {
-				engPanels[i-2].setBorder(BorderFactory.createTitledBorder("TimeOffset_LR [Adj. LR-Offset for Global TimeOffset step]"));
+				engPanels[i-2].setBorder(BorderFactory.createTitledBorder("TimeOffset_LR"));
 			}
 			if (i-2 == 1) {
 				engPanels[i-2].setBorder(BorderFactory.createTitledBorder("Effective Velocity"));
