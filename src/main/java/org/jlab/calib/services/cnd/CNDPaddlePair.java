@@ -701,12 +701,14 @@ public class CNDPaddlePair {
         if(RUN!=currentRunTarget){	
         	System.out.println(" there");
     		DatabaseConstantProvider dcp = new DatabaseConstantProvider(RUN, CNDCalibration.targetVariation);
-    		target = dcp.readConstants("/geometry/target");
-    		dcp.disconnect();
+		//    		target = dcp.readConstants("/geometry/target");
+		target = dcp.readConstants("/geometry/shifts/solenoid");
+   		dcp.disconnect();
     		currentRunTarget=RUN;
     		
     		}
-    	targetZ = target.getDoubleValue("position", 0,0,0);
+	//    	targetZ = target.getDoubleValue("position", 0,0,0);
+	targetZ = target.getDoubleValue("z", 0,0,0);
     	//System.out.println(" here in targetCCDB "+CNDCalibration.targetVariation+" "+targetZ);
        
         // L1 = 38.999cm
