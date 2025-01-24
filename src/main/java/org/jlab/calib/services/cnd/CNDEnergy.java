@@ -110,7 +110,7 @@ public class CNDEnergy extends CNDCalibrationEngine{
 	//logmean parameters
 	public int HIST_M_BIN = 100;
 	public double HIST_M_MIN = 500;
-	public double StartFitGeoMean = 1000;
+	public double StartFitGeoMean = 800;
 	public double HIST_M_MAX = 3000;
 	
 	//        public int HIST_Y_BINS = 300;
